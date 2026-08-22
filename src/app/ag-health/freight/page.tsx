@@ -56,7 +56,7 @@ export default async function FreightPage() {
         <MetricCard label="Ledger vs sales" value={data.dashboard.monthlySales ? `${((data.freight.totalFreightExpense / data.dashboard.monthlySales) * 100).toFixed(2)}%` : "ERP pending"} note="Freight as a share of monthly sales." icon={dashboardIcons.BarChart3} />
         <MetricCard label="Average monthly expense" value={formatNpr(averageFreight)} note="Average across matched live rows." icon={dashboardIcons.Route} />
       </div>
-      <article className="mt-8 analysis-panel">
+      <article className="mt-8 chart-container">
         <DataTable
           headers={["Date", "Supplier/customer", "Invoice/reference", "Freight amount", "Transport company", "Related purchase/order", "Remarks"]}
           rows={data.freight.rows.map((row) => [

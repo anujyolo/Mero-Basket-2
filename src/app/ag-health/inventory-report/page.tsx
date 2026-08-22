@@ -58,7 +58,7 @@ export default async function InventoryReportPage() {
       </div>
       <div className="mt-8 grid gap-6">
         {data.inventoryByCategory.map((category) => (
-          <article key={category.category} className="analysis-panel">
+          <article key={category.category} className="chart-container">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
               <div>
                 <h2 className="text-2xl font-black">{category.category}</h2>

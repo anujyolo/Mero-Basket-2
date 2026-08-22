@@ -43,7 +43,7 @@ export default async function OrdersPage() {
         <MetricCard label="Total orders" value={formatQuantity(data.orders.totalOrders)} note="SalesOrder records available from ERP." icon={dashboardIcons.ClipboardCheck} />
         <MetricCard label="Pending orders" value={formatQuantity(data.orders.pendingOrders)} note="Pending or processing rows in the extracted list." icon={dashboardIcons.ReceiptText} />
       </div>
-      <article className="mt-8 analysis-panel">
+      <article className="mt-8 chart-container">
         <DataTable
           headers={["Order number", "Customer", "Order date", "Product", "Quantity", "Amount", "Order status", "Delivery status"]}
           rows={data.orders.rows.map((row) => [

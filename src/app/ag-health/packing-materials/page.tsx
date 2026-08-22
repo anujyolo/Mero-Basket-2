@@ -53,7 +53,7 @@ export default async function PackingMaterialsPage() {
       <div className="mt-8 grid gap-4 md:grid-cols-3">
         <MetricCard label="Packing material stock" value={formatQuantity(data.dashboard.packingMaterialStock)} note="Only PM category stock." icon={dashboardIcons.PackageCheck} />
       </div>
-      <article className="mt-8 analysis-panel">
+      <article className="mt-8 chart-container">
         <DataTable
           headers={["Packing material name", "Current stock", "Unit", "Purchased qty", "Purchase rate", "Supplier", "Purchase date", "Remaining qty"]}
           rows={data.packingMaterials.map((row) => [

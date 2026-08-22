@@ -41,7 +41,7 @@ export function InventoryRegister({ rows }: { rows: InventoryReportRow[] }) {
   const stockValue = filteredRows.reduce((sum, row) => sum + row.stockValue, 0);
 
   return (
-    <article className="analysis-panel">
+    <article className="chart-container">
       <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
         <div>
           <p className="text-sm font-black uppercase tracking-[0.2em] text-[var(--navy)]">Inventory Register</p>

@@ -106,7 +106,7 @@ export function SalesLineExplorer({ rows, sourceNote }: { rows: SalesLineAnalysi
   };
 
   return (
-    <article className="analysis-panel">
+    <article className="chart-container">
       <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
         <div>
           <p className="text-sm font-black uppercase tracking-[0.2em] text-[var(--navy)]">Product Sales Explorer</p>
@@ -168,20 +168,20 @@ export function SalesLineExplorer({ rows, sourceNote }: { rows: SalesLineAnalysi
       ) : null}
 
       <div className="mt-6 grid gap-4 md:grid-cols-3">
-        <div className="snapshot-card">
-          <p className="text-xs font-black uppercase tracking-[0.12em] text-[var(--text-light)]">Hero product</p>
+        <div className="kpi-card green">
+          <p className="kpi-title">Hero product</p>
           <p className="mt-3 text-xl font-black text-[var(--navy)]">{heroProduct?.product || "Not mapped"}</p>
-          <p className="mt-2 text-sm font-semibold text-[var(--text)]">{heroProduct ? `${qty(heroProduct.quantity)} qty · ${npr(heroProduct.amount)}` : "No rows in current filter."}</p>
+          <p className="kpi-subtitle">{heroProduct ? `${qty(heroProduct.quantity)} qty · ${npr(heroProduct.amount)}` : "No rows in current filter."}</p>
         </div>
-        <div className="snapshot-card">
-          <p className="text-xs font-black uppercase tracking-[0.12em] text-[var(--text-light)]">Best location</p>
+        <div className="kpi-card info">
+          <p className="kpi-title">Best location</p>
           <p className="mt-3 text-xl font-black text-[var(--navy)]">{bestLocation?.label || "Not mapped"}</p>
-          <p className="mt-2 text-sm font-semibold text-[var(--text)]">{bestLocation ? `${npr(bestLocation.amount)} · ${bestLocation.dealers.size} dealer(s)` : "No rows in current filter."}</p>
+          <p className="kpi-subtitle">{bestLocation ? `${npr(bestLocation.amount)} · ${bestLocation.dealers.size} dealer(s)` : "No rows in current filter."}</p>
         </div>
-        <div className="snapshot-card">
-          <p className="text-xs font-black uppercase tracking-[0.12em] text-[var(--text-light)]">Best dealer</p>
+        <div className="kpi-card gold">
+          <p className="kpi-title">Best dealer</p>
           <p className="mt-3 text-xl font-black text-[var(--navy)]">{bestDealer?.label || "Not mapped"}</p>
-          <p className="mt-2 text-sm font-semibold text-[var(--text)]">{bestDealer ? `${npr(bestDealer.amount)} · ${bestDealer.products.size} product(s)` : "No rows in current filter."}</p>
+          <p className="kpi-subtitle">{bestDealer ? `${npr(bestDealer.amount)} · ${bestDealer.products.size} product(s)` : "No rows in current filter."}</p>
         </div>
       </div>
 

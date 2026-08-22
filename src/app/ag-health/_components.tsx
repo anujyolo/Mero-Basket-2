@@ -91,11 +91,13 @@ export function AGHealthShell({
 
 export function MetricCard({ label, value, note, icon: Icon }: { label: string; value: string; note: string; icon: LucideIcon }) {
   return (
-    <article className="snapshot-card">
-      <Icon className="size-6 text-[var(--navy)]" aria-hidden="true" />
-      <p className="mt-4 text-xs font-black uppercase tracking-[0.12em] text-[var(--text-light)]">{label}</p>
-      <p className="mt-3 text-2xl font-black text-[var(--navy)]">{value}</p>
-      <p className="mt-3 text-sm leading-6 text-[var(--text)]">{note}</p>
+    <article className="kpi-card info">
+      <div className="kpi-header">
+        <h3 className="kpi-title">{label}</h3>
+        <span className="kpi-icon"><Icon className="size-5" aria-hidden="true" /></span>
+      </div>
+      <p className="kpi-value text-2xl">{value}</p>
+      <p className="kpi-subtitle">{note}</p>
     </article>
   );
 }
@@ -181,7 +183,7 @@ export function SectionHeader({ eyebrow, title, children }: { eyebrow: string; t
 
 export function DataTable({ headers, rows }: { headers: string[]; rows: (string | number)[][] }) {
   return (
-    <div className="mt-6 overflow-x-auto rounded-2xl border border-[var(--border)]">
+    <div className="mt-6 overflow-x-auto rounded-2xl border border-[var(--border)] bg-white shadow-sm">
       <table className="min-w-full border-collapse bg-white text-left text-sm">
         <thead className="bg-[var(--soft)] text-xs font-black uppercase tracking-[0.12em] text-[var(--text-light)]">
           <tr>
@@ -220,11 +222,11 @@ export function BarChart({
   const formatAxis = axisFormatter || valueFormatter;
 
   return (
-    <article className="analysis-panel overflow-hidden">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+    <article className="chart-container">
+      <div className="chart-header flex-col sm:flex-row">
         <div>
-          <h3 className="text-2xl font-black text-[var(--ink)]">{title}</h3>
-          {note ? <p className="mt-2 max-w-3xl text-sm font-semibold leading-6 text-[var(--text)]">{note}</p> : null}
+          <h3 className="chart-title">{title}</h3>
+          {note ? <p className="chart-subtitle max-w-3xl">{note}</p> : null}
         </div>
         <span className="rounded-full bg-[var(--soft)] px-4 py-2 text-xs font-black uppercase tracking-[0.08em] text-[var(--text)]">
           {bars.length.toLocaleString("en-US")} points
@@ -269,8 +271,8 @@ export function ComboBarChart({
   bars: { label: string; production: number; purchases: number; revenue: number }[];
 }) {
   return (
-    <article className="analysis-panel">
-      <h3 className="text-2xl font-black text-[var(--ink)]">{title}</h3>
+    <article className="chart-container">
+      <h3 className="chart-title">{title}</h3>
       <div className="mt-5 flex flex-wrap gap-4 text-sm font-black">
         <span className="text-emerald-600">Production Output</span>
         <span className="text-[var(--gold)]">Purchases</span>
@@ -315,8 +317,8 @@ export function PieChartCard({
     : "#e1e7ef 0% 100%";
 
   return (
-    <article className="analysis-panel">
-      <h3 className="text-2xl font-black text-[var(--ink)]">{title}</h3>
+    <article className="chart-container">
+      <h3 className="chart-title">{title}</h3>
       <div className="mt-8 grid gap-8 md:grid-cols-[16rem_1fr] md:items-center">
         <div className="relative mx-auto grid size-56 place-items-center rounded-full shadow-[inset_0_0_0_1px_var(--border)]" style={{ background: `conic-gradient(${gradient})` }}>
           <div className="grid size-28 place-items-center rounded-full bg-white text-center shadow-[var(--shadow-soft)]">
