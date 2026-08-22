@@ -167,14 +167,14 @@ a {
 
 .ag-nav-tab {
   display: inline-flex;
-  min-height: 3rem;
+  min-height: 2.45rem;
   flex-shrink: 0;
   align-items: center;
-  gap: 0.65rem;
-  border-radius: 1rem;
-  padding: 0 1rem;
+  gap: 0.5rem;
+  border-radius: 0.85rem;
+  padding: 0 0.72rem;
   color: var(--text);
-  font-size: 0.95rem;
+  font-size: 0.82rem;
   font-weight: 900;
   transition:
     background 160ms ease,

@@ -1,5 +1,6 @@
 import { AGHealthShell, BarChart, ExecutiveKpiCard, HeroPanel, MetricCard, SectionHeader, dashboardIcons } from "../_components";
 import { formatNpr, formatPercent, getAGHealthDashboardData } from "@/server/business-central/data";
+import { SalesLineExplorer } from "./sales-line-explorer";
 
 export const dynamic = "force-dynamic";
 
@@ -17,8 +18,8 @@ export default async function SalesAnalysisPage() {
     <AGHealthShell active="sales-analysis" company={data.company} connected={data.connected}>
       <HeroPanel
         eyebrow="Sales Analysis"
-        title="Sales trend and growth dashboard"
-        description="This follows the reference sales-analysis page: filters/actions at the top, headline cards first, then monthly and yearly chart panels."
+        title="Sales trend and product drilldown"
+        description="Clear sales reporting: money totals from the live SalesDashboard feed, plus product/customer/month filtering from sales order lines."
         stats={[
           { label: "Total sales", value: formatNpr(data.salesAnalysis.totalSales), note: "Total in the analysis window.", icon: dashboardIcons.BarChart3 },
           { label: "Current month", value: formatNpr(data.salesAnalysis.currentMonthSales), note: latestMonth, icon: dashboardIcons.BarChart3 },
@@ -32,16 +33,13 @@ export default async function SalesAnalysisPage() {
         ]}
       />
       <section className="mt-10">
-        <SectionHeader eyebrow="Filters" title="Sales support controls">
-          These controls mirror the reference layout. The current build displays all live ERP sales rows while the next step can make these filters interactive.
+        <SectionHeader eyebrow="Data meaning" title="What this sales data shows">
+          The top KPI and charts are financial sales totals from Business Central SalesDashboard. The product filter below uses salesDocumentLines joined with SalesOrder, so you can search products like M5 and filter by month and customer/place.
         </SectionHeader>
-        <div className="mt-6 grid gap-4 rounded-[28px] border border-[var(--border)] bg-white p-6 shadow-[var(--shadow-soft)] md:grid-cols-4">
-          {["From Date", "To Date", "Person", "Product"].map((label) => (
-            <label key={label} className="grid gap-2 text-sm font-black text-[var(--text)]">
-              {label}
-              <span className="rounded-2xl border border-[var(--border)] bg-[var(--soft)] px-4 py-3 text-[var(--text-light)]">All live ERP data</span>
-            </label>
-          ))}
+        <div className="mt-6 grid gap-4 rounded-[28px] border border-[var(--border)] bg-white p-6 shadow-[var(--shadow-soft)] md:grid-cols-3">
+          <MetricCard label="Financial source" value="SalesDashboard" note="Used for total sales, monthly sales, yearly sales, and revenue trend charts." icon={dashboardIcons.BarChart3} />
+          <MetricCard label="Product source" value="salesDocumentLines" note="Used for product quantity search and order-line product drilldown." icon={dashboardIcons.Route} />
+          <MetricCard label="Customer source" value="SalesOrder" note="Joined by order number to show customer/place, month, order status, and delivery status." icon={dashboardIcons.ReceiptText} />
         </div>
       </section>
       <section className="mt-10">
@@ -64,6 +62,9 @@ export default async function SalesAnalysisPage() {
       <div className="mt-8 grid gap-6 xl:grid-cols-2">
         <BarChart title="Monthly Sales Trend" bars={data.salesAnalysis.monthlyTrend} valueFormatter={formatNpr} axisFormatter={compactNpr} />
         <BarChart title="Yearly Sales Trend" bars={data.salesAnalysis.yearlyTrend} valueFormatter={formatNpr} axisFormatter={compactNpr} />
+      </div>
+      <div className="mt-8">
+        <SalesLineExplorer rows={data.salesAnalysis.lineRows} sourceNote={data.salesAnalysis.lineSourceNote} />
       </div>
     </AGHealthShell>
   );

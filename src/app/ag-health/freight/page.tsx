@@ -22,7 +22,7 @@ export default async function FreightPage() {
         ]}
         actions={[
           { label: "Sales Analysis", href: "/ag-health/sales-analysis" },
-          { label: "Distributed Expense", href: "/ag-health/distributed-expense" },
+          { label: "Inventory Report", href: "/ag-health/inventory-report" },
           { label: "Orders", href: "/ag-health/orders" },
         ]}
       />

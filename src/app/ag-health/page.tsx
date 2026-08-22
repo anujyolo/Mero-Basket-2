@@ -26,7 +26,6 @@ export default async function AGHealthDashboard() {
     { label: "Monthly Production", value: formatQuantity(data.dashboard.monthlyProduction, "units"), note: "Current month finished production.", icon: dashboardIcons.Factory },
     { label: "Monthly Sales", value: formatNpr(data.dashboard.monthlySales), note: "Current/latest month sales.", icon: dashboardIcons.BarChart3 },
     { label: "Total Freight", value: formatNpr(data.dashboard.totalFreight), note: "Mapped freight-related GL rows.", icon: dashboardIcons.Truck },
-    { label: "Distributed Expense", value: formatNpr(data.dashboard.distributedExpense), note: "Mapped distribution/allocation expenses.", icon: dashboardIcons.WalletCards },
     { label: "Pending Orders", value: formatQuantity(data.dashboard.pendingOrders), note: "Pending or processing orders.", icon: dashboardIcons.Route },
   ];
 
@@ -38,7 +37,7 @@ export default async function AGHealthDashboard() {
         description="The homepage starts with the most important live numbers first, followed by charts and module drilldowns in the same premium order as the reference dashboard."
         stats={[
           { label: "Source mode", value: data.connected ? "Live ERP" : "ERP Pending", note: data.company, icon: dashboardIcons.BarChart3 },
-          { label: "Focused modules", value: "7", note: "Inventory, packing, production, sales, freight, expense, orders.", icon: dashboardIcons.Route },
+          { label: "Focused modules", value: "6", note: "Inventory, packing, production, sales, freight, and orders.", icon: dashboardIcons.Route },
           { label: "Inventory categories", value: data.inventoryByCategory.length.toLocaleString("en-US"), note: "Separated ERP item posting groups.", icon: dashboardIcons.Boxes },
           { label: "Latest live month", value: latestSalesMonth, note: "Latest month found in the sales trend.", icon: dashboardIcons.BarChart3 },
         ]}
@@ -54,7 +53,7 @@ export default async function AGHealthDashboard() {
       <section className="mt-10">
         <p className="text-sm font-black uppercase tracking-[0.2em] text-[var(--navy)]">Overview</p>
         <h2 className="mt-4 text-4xl font-black tracking-tight">Executive Snapshot</h2>
-        <p className="mt-4 max-w-5xl text-xl leading-9 text-[var(--text)]">Large cards are placed first, like the reference dashboard, so the main ERP story is visible immediately.</p>
+        <p className="mt-4 max-w-5xl text-xl leading-9 text-[var(--text)]">Large cards are placed first. Each card names the ERP source so the numbers are easier to understand.</p>
         <div className="mt-8 grid gap-6 xl:grid-cols-3">
           <ExecutiveKpiCard title="Business Central Sales" value={formatNpr(data.dashboard.totalSales)} detail="Live sales total from the connected Business Central SalesDashboard feed." source="SalesDashboard" icon={dashboardIcons.BarChart3} />
           <ExecutiveKpiCard title="Business Central Receivables" value={formatNpr(data.dashboard.receivables)} detail="Customer receivables from the live trial balance row mapped for Sundry Debtor." source="ExcelTemplateTrialBalance" icon={dashboardIcons.ReceiptText} />

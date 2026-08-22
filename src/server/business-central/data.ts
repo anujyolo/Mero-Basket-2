@@ -174,6 +174,20 @@ export type OrderRow = {
   deliveryStatus: string;
 };
 
+export type SalesLineAnalysisRow = {
+  orderNumber: string;
+  customer: string;
+  orderDate: string;
+  month: string;
+  product: string;
+  quantity: number;
+  amount: number;
+  outstandingQuantity: number;
+  orderStatus: OrderRow["orderStatus"];
+  deliveryStatus: string;
+  place: string;
+};
+
 export type AGHealthDashboardData = {
   connected: boolean;
   checkedAt: string;
@@ -217,6 +231,8 @@ export type AGHealthDashboardData = {
     growthPercentage: number | null;
     monthlyTrend: { label: string; amount: number; height: number }[];
     yearlyTrend: { label: string; amount: number; height: number }[];
+    lineRows: SalesLineAnalysisRow[];
+    lineSourceNote: string;
   };
   freight: {
     rows: FreightRow[];
@@ -415,6 +431,8 @@ function emptyData(message: string, company: string): AGHealthDashboardData {
       growthPercentage: null,
       monthlyTrend: [],
       yearlyTrend: [],
+      lineRows: [],
+      lineSourceNote: "Product-level sales rows are unavailable until the ERP sales line source is reachable.",
     },
     freight: {
       rows: [],
@@ -639,6 +657,31 @@ export async function getAGHealthDashboardData(): Promise<AGHealthDashboardData>
     const yearlySales = yearlySalesMap.get(CURRENT_YEAR) || yearlyTrendRaw.at(-1)?.[1] || 0;
 
     const orderLinesByDocument = Map.groupBy(orderLineResult.rows, (row) => row.documentNumber || "");
+    const orderByNumber = new Map(orderResult.rows.map((order) => [order.No || "", order]));
+    const salesLineRows = orderLineResult.rows
+      .map((line) => {
+        const order = orderByNumber.get(line.documentNumber || "");
+        const outstanding = toNumber(line.outstandingQuantity);
+        const quantity = toNumber(line.quantity);
+        const orderStatus = normalizeStatus(order?.Status, outstanding);
+        const orderDate = order?.Order_Date || order?.Posting_Date || "Not mapped";
+
+        return {
+          orderNumber: line.documentNumber || "Not mapped",
+          customer: order?.Sell_to_Customer_Name || "Not mapped",
+          orderDate,
+          month: toMonth(orderDate),
+          product: line.description || "Not mapped",
+          quantity,
+          amount: toNumber(line.amount),
+          outstandingQuantity: outstanding,
+          orderStatus,
+          deliveryStatus: outstanding > 0 ? "Pending delivery" : "Ready / completed",
+          place: order?.Sell_to_Customer_Name || "Not mapped",
+        };
+      })
+      .filter((row) => row.product !== "Not mapped" || row.quantity > 0 || row.amount > 0)
+      .sort((a, b) => b.orderDate.localeCompare(a.orderDate));
     const orders = orderResult.rows.slice(0, 20).map((order) => {
       const lines = orderLinesByDocument.get(order.No || "") || [];
       const firstLine = lines[0];
@@ -757,6 +800,8 @@ export async function getAGHealthDashboardData(): Promise<AGHealthDashboardData>
         growthPercentage,
         monthlyTrend: monthlyTrendRaw.map(([label, amount]) => ({ label, amount, height: heightFor(amount, monthlyMax) })),
         yearlyTrend: yearlyTrendRaw.map(([label, amount]) => ({ label, amount, height: heightFor(amount, yearlyMax) })),
+        lineRows: salesLineRows,
+        lineSourceNote: "Money totals come from SalesDashboard by Posting_Date. Product/customer filters use salesDocumentLines joined to SalesOrder, so they show sales-order line quantity and amount.",
       },
       freight: {
         rows: freightRows,

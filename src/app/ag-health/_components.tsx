@@ -14,7 +14,6 @@ import {
   Route as RouteIcon,
   Truck,
   User,
-  WalletCards,
   type LucideIcon,
 } from "lucide-react";
 
@@ -24,7 +23,6 @@ export const agHealthModules: { label: string; href: NextRoute; icon: LucideIcon
   { label: "Production", href: "/ag-health/production", icon: Factory, id: "production" },
   { label: "Sales Analysis", href: "/ag-health/sales-analysis", icon: BarChart3, id: "sales-analysis" },
   { label: "Freight", href: "/ag-health/freight", icon: Truck, id: "freight" },
-  { label: "Distributed Expense", href: "/ag-health/distributed-expense", icon: WalletCards, id: "distributed-expense" },
   { label: "Orders", href: "/ag-health/orders", icon: ClipboardCheck, id: "orders" },
 ];
 
@@ -34,7 +32,6 @@ export const dashboardIcons = {
   Factory,
   BarChart3,
   Truck,
-  WalletCards,
   ClipboardCheck,
   Banknote,
   Route: RouteIcon,
@@ -44,7 +41,7 @@ export const dashboardIcons = {
 function NavLink({ label, href, icon: Icon, active }: { label: string; href: NextRoute; icon: LucideIcon; active?: boolean }) {
   return (
     <Link href={href} className={`ag-nav-tab ${active ? "ag-nav-tab-active" : ""}`}>
-      <Icon className="size-5" aria-hidden="true" />
+      <Icon className="size-4" aria-hidden="true" />
       {label}
     </Link>
   );
@@ -63,14 +60,14 @@ export function AGHealthShell({
 }) {
   return (
     <main className="min-h-screen bg-[var(--canvas)] pb-12 text-[var(--ink)]">
-      <header className="sticky top-0 z-30 border-b border-[var(--border)] bg-white/95 px-5 py-4 shadow-[0_8px_28px_rgba(31,48,74,0.05)] backdrop-blur">
-        <div className="mx-auto flex max-w-[1740px] flex-col gap-4 xl:flex-row xl:items-center">
+      <header className="sticky top-0 z-30 border-b border-[var(--border)] bg-white/95 px-5 py-3 shadow-[0_8px_28px_rgba(31,48,74,0.05)] backdrop-blur">
+        <div className="mx-auto flex max-w-[1740px] flex-col gap-3 xl:flex-row xl:items-center">
           <Link href="/" className="flex items-center gap-4 rounded-2xl">
-            <span className="grid size-12 place-items-center rounded-2xl bg-[var(--navy)] text-white shadow-[0_10px_25px_rgba(31,63,103,0.22)]">
-              <BarChart3 className="size-7" aria-hidden="true" />
+            <span className="grid size-10 place-items-center rounded-2xl bg-[var(--navy)] text-white shadow-[0_10px_25px_rgba(31,63,103,0.22)]">
+              <BarChart3 className="size-6" aria-hidden="true" />
             </span>
             <span>
-              <span className="block text-xl font-black leading-tight">Factory Manager</span>
+              <span className="block text-lg font-black leading-tight">Factory Manager</span>
               <span className="block text-xs font-black uppercase tracking-[0.14em] text-[var(--gold)]">AG Health</span>
             </span>
           </Link>
@@ -79,10 +76,10 @@ export function AGHealthShell({
             {agHealthModules.map((module) => <NavLink key={module.id} {...module} active={active === module.id} />)}
           </nav>
           <div className="flex shrink-0 items-center gap-3">
-            <span className="rounded-2xl border border-[var(--border)] bg-[var(--cream)] px-5 py-3 text-sm font-black">{connected ? "ERP Live" : "ERP Pending"}</span>
-            <span className="flex items-center gap-3 rounded-2xl border border-[var(--border)] bg-white px-4 py-3 shadow-sm">
-              <span className="grid size-10 place-items-center rounded-xl bg-[var(--gold)] text-white"><User className="size-5" aria-hidden="true" /></span>
-              <span><span className="block font-black">AG Health</span><span className="block text-sm text-[var(--text-light)]">{company}</span></span>
+            <span className="rounded-2xl border border-[var(--border)] bg-[var(--cream)] px-4 py-2 text-xs font-black">{connected ? "ERP Live" : "ERP Pending"}</span>
+            <span className="flex items-center gap-2 rounded-2xl border border-[var(--border)] bg-white px-3 py-2 shadow-sm">
+              <span className="grid size-9 place-items-center rounded-xl bg-[var(--gold)] text-white"><User className="size-4" aria-hidden="true" /></span>
+              <span><span className="block text-sm font-black">AG Health</span><span className="block max-w-32 truncate text-xs text-[var(--text-light)]">{company}</span></span>
             </span>
           </div>
         </div>
