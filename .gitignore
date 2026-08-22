@@ -35,11 +35,16 @@ temp/
 # JavaScript / TypeScript
 node_modules/
 .next/
+.vercel/
 .nuxt/
 .svelte-kit/
 dist/
 build/
+out/
 coverage/
+.pnpm-store/
+playwright-report/
+test-results/
 *.tsbuildinfo
 
 # Python
