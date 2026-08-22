@@ -268,18 +268,31 @@ export function BarChart({
 export function ComboBarChart({
   title,
   bars,
+  note,
+  middleLabel = "Purchases",
 }: {
   title: string;
-  bars: { label: string; production: number; purchases: number; revenue: number }[];
+  bars: {
+    label: string;
+    production: number;
+    purchases: number;
+    revenue: number;
+    productionAmount?: string;
+    purchasesAmount?: string;
+    revenueAmount?: string;
+  }[];
+  note?: string;
+  middleLabel?: string;
 }) {
   const hasPositiveValues = bars.some((bar) => bar.production > 0 || bar.purchases > 0 || bar.revenue > 0);
 
   return (
     <article className="chart-container">
       <h3 className="chart-title">{title}</h3>
+      {note ? <p className="chart-subtitle max-w-5xl">{note}</p> : null}
       <div className="mt-5 flex flex-wrap gap-4 text-sm font-black">
         <span className="text-emerald-600">Production Output</span>
-        <span className="text-[var(--gold)]">Purchases</span>
+        <span className="text-[var(--gold)]">{middleLabel}</span>
         <span className="text-[var(--navy)]">Revenue</span>
       </div>
       <div className="premium-chart-surface mt-8 overflow-x-auto p-4">
@@ -288,9 +301,9 @@ export function ComboBarChart({
         {bars.map((bar) => (
           <div key={bar.label} className="flex flex-1 flex-col items-center justify-end gap-2">
             <span className="flex h-full w-full items-end justify-center gap-1">
-              <span className="premium-chart-bar w-3 bg-emerald-500" style={{ height: `${bar.production}%` }} />
-              <span className="premium-chart-bar w-3 bg-[var(--gold)]" style={{ height: `${bar.purchases}%` }} />
-              <span className="premium-chart-bar w-3 bg-[var(--navy)]" style={{ height: `${bar.revenue}%` }} />
+              <span className="premium-chart-bar w-3 bg-emerald-500" title={`Production ${bar.label}: ${bar.productionAmount || `${bar.production}%`}`} style={{ height: `${bar.production}%` }} />
+              <span className="premium-chart-bar w-3 bg-[var(--gold)]" title={`${middleLabel} ${bar.label}: ${bar.purchasesAmount || `${bar.purchases}%`}`} style={{ height: `${bar.purchases}%` }} />
+              <span className="premium-chart-bar w-3 bg-[var(--navy)]" title={`Revenue ${bar.label}: ${bar.revenueAmount || `${bar.revenue}%`}`} style={{ height: `${bar.revenue}%` }} />
             </span>
             <span className="text-xs font-semibold text-[var(--text-light)] [writing-mode:vertical-rl] sm:[writing-mode:horizontal-tb]">{bar.label}</span>
           </div>

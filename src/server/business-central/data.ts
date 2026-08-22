@@ -252,6 +252,7 @@ export type AGHealthDashboardData = {
     currentMonthSales: number;
     growthPercentage: number | null;
     monthlyTrend: { label: string; amount: number; height: number }[];
+    monthlyCostTrend: { label: string; amount: number; height: number }[];
     yearlyTrend: { label: string; amount: number; height: number }[];
     lineRows: SalesLineAnalysisRow[];
     lineSourceNote: string;
@@ -456,6 +457,7 @@ function emptyData(message: string, company: string): AGHealthDashboardData {
       currentMonthSales: 0,
       growthPercentage: null,
       monthlyTrend: [],
+      monthlyCostTrend: [],
       yearlyTrend: [],
       lineRows: [],
       lineSourceNote: "Product-level sales rows are unavailable until the ERP sales line source is reachable.",
@@ -661,21 +663,26 @@ export async function getAGHealthDashboardData(): Promise<AGHealthDashboardData>
       .filter((row) => row.value > 0);
 
     const monthlySalesMap = new Map<string, number>();
+    const monthlyCostMap = new Map<string, number>();
     const yearlySalesMap = new Map<string, number>();
     let totalSales = 0;
 
     for (const row of salesResult.rows) {
       const amount = toNumber(row.Sales_Amount_Actual);
+      const costAmount = Math.abs(toNumber(row.Cost_Amount_Actual));
       const month = toMonth(row.Posting_Date);
       const year = toYear(row.Posting_Date);
       totalSales += amount;
       monthlySalesMap.set(month, (monthlySalesMap.get(month) || 0) + amount);
+      monthlyCostMap.set(month, (monthlyCostMap.get(month) || 0) + costAmount);
       yearlySalesMap.set(year, (yearlySalesMap.get(year) || 0) + amount);
     }
 
     const monthlyTrendRaw = [...monthlySalesMap.entries()].sort(([a], [b]) => a.localeCompare(b));
+    const monthlyCostTrendRaw = [...monthlyCostMap.entries()].sort(([a], [b]) => a.localeCompare(b));
     const yearlyTrendRaw = [...yearlySalesMap.entries()].sort(([a], [b]) => a.localeCompare(b));
     const monthlyMax = Math.max(...monthlyTrendRaw.map(([, amount]) => amount), 0);
+    const monthlyCostMax = Math.max(...monthlyCostTrendRaw.map(([, amount]) => amount), 0);
     const yearlyMax = Math.max(...yearlyTrendRaw.map(([, amount]) => amount), 0);
     const currentMonthSales = monthlySalesMap.get(CURRENT_MONTH) || monthlyTrendRaw.at(-1)?.[1] || 0;
     const previousMonthSales = monthlyTrendRaw.at(-2)?.[1] || 0;
@@ -834,6 +841,7 @@ export async function getAGHealthDashboardData(): Promise<AGHealthDashboardData>
         currentMonthSales,
         growthPercentage,
         monthlyTrend: monthlyTrendRaw.map(([label, amount]) => ({ label, amount, height: heightFor(amount, monthlyMax) })),
+        monthlyCostTrend: monthlyCostTrendRaw.map(([label, amount]) => ({ label, amount, height: heightFor(amount, monthlyCostMax) })),
         yearlyTrend: yearlyTrendRaw.map(([label, amount]) => ({ label, amount, height: heightFor(amount, yearlyMax) })),
         lineRows: salesLineRows,
         lineSourceNote: "Money totals come from SalesDashboard by Posting_Date. Product/customer filters use salesDocumentLines joined to SalesOrder, so they show sales-order line quantity and amount.",

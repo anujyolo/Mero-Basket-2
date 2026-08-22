@@ -10,15 +10,37 @@ const compactNpr = (value: number) => `NPR ${new Intl.NumberFormat("en-US", {
   maximumFractionDigits: 1,
 }).format(value)}`;
 
+const chartHeight = (value: number, max: number) => max > 0 && value > 0 ? Math.max(6, Math.round((value / max) * 92)) : 0;
+
 export default async function AGHealthDashboard() {
   const data = await getAGHealthDashboardData();
   const latestSalesMonth = data.salesAnalysis.monthlyTrend.at(-1)?.label || "Latest month";
-  const latestProductionBars = data.salesAnalysis.monthlyTrend.slice(-12).map((bar) => ({
-    label: bar.label,
-    production: data.production.totalProduction > 0 ? 58 : 6,
-    purchases: data.dashboard.packingMaterialStock ? 42 : 5,
-    revenue: bar.height,
-  }));
+  const productionByMonth = new Map(data.production.monthlyTrend.map((row) => [row.label, row.amount]));
+  const costByMonth = new Map(data.salesAnalysis.monthlyCostTrend.map((row) => [row.label, row.amount]));
+  const revenueByMonth = new Map(data.salesAnalysis.monthlyTrend.map((row) => [row.label, row.amount]));
+  const comboLabels = Array.from(new Set([
+    ...data.salesAnalysis.monthlyTrend.map((row) => row.label),
+    ...data.salesAnalysis.monthlyCostTrend.map((row) => row.label),
+    ...data.production.monthlyTrend.map((row) => row.label),
+  ])).sort().slice(-12);
+  const productionMax = Math.max(...comboLabels.map((label) => productionByMonth.get(label) || 0), 0);
+  const costMax = Math.max(...comboLabels.map((label) => costByMonth.get(label) || 0), 0);
+  const revenueMax = Math.max(...comboLabels.map((label) => revenueByMonth.get(label) || 0), 0);
+  const latestProductionBars = comboLabels.map((label) => {
+    const production = productionByMonth.get(label) || 0;
+    const cost = costByMonth.get(label) || 0;
+    const revenue = revenueByMonth.get(label) || 0;
+
+    return {
+      label,
+      production: chartHeight(production, productionMax),
+      purchases: chartHeight(cost, costMax),
+      revenue: chartHeight(revenue, revenueMax),
+      productionAmount: formatQuantity(production, "units"),
+      purchasesAmount: formatNpr(cost),
+      revenueAmount: formatNpr(revenue),
+    };
+  });
   const metrics = [
     { label: "Total Inventory Value", value: formatNpr(data.dashboard.totalInventoryValue), note: "Current stock × purchase/cost rate from ERP items.", icon: dashboardIcons.Boxes },
     { label: "Packing Material Stock", value: formatQuantity(data.dashboard.packingMaterialStock), note: "Only PM category stock.", icon: dashboardIcons.PackageCheck },
@@ -76,7 +98,12 @@ export default async function AGHealthDashboard() {
             axisFormatter={compactNpr}
             note="Monthly sales placement follows the reference dashboard, while values come from this project’s ERP feed."
           />
-          <ComboBarChart title="Business Central Production Output, Packing Stock, and Revenue" bars={latestProductionBars} />
+          <ComboBarChart
+            title="Business Central Production Output, Cost, and Revenue"
+            bars={latestProductionBars}
+            middleLabel="Cost Amount"
+            note="This comparison uses exact ERP values by month: production quantity from finished production orders, cost amount from SalesDashboard Cost_Amount_Actual, and revenue from SalesDashboard Sales_Amount_Actual. Each series is scaled separately so units and NPR values stay readable."
+          />
           <div className="grid gap-6 xl:grid-cols-2">
             <PieChartCard title="Inventory Value by Category" slices={data.inventoryCategoryMix} valueFormatter={formatNpr} />
             <PieChartCard title="Order Status Mix" slices={data.orders.statusMix} valueFormatter={(value) => formatQuantity(value)} />
