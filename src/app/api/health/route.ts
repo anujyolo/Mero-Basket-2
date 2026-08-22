@@ -1,14 +1,25 @@
 import { NextResponse } from "next/server";
 
+import { getBusinessCentralStatus } from "@/server/business-central/client";
+
 export const dynamic = "force-dynamic";
 
-export function GET() {
+export async function GET() {
+  const erp = await getBusinessCentralStatus();
+
   return NextResponse.json(
     {
       status: "ok",
       application: "Mero Basket Factory Operations",
       phase: "erp-dashboard-foundation",
-      dataConnection: "not-configured",
+      dataConnection: erp.status,
+      erp: {
+        company: erp.company,
+        webReachable: erp.webReachable,
+        serviceConfigured: erp.serviceConfigured,
+        serviceReachable: erp.serviceReachable,
+        credentials: erp.hasCredentials ? "configured" : "missing",
+      },
       requiredData: [
         "raw-materials",
         "finished-goods",

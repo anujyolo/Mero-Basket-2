@@ -239,6 +239,33 @@ This helps businesses understand not only **what is happening internally**, but 
 
 ---
 
+## Business Central connection
+
+The app is pointed at the AG Health Business Central web client, but real
+credentials must stay local and must never be committed to GitHub.
+
+1. Copy `.env.example` to `.env.local`.
+2. Fill in `BUSINESS_CENTRAL_USERNAME` and `BUSINESS_CENTRAL_PASSWORD`.
+3. Add `BUSINESS_CENTRAL_SERVICE_BASE_URL` when the ERP admin provides the
+   published API/OData URL.
+
+Useful local checks:
+
+```sh
+curl http://localhost:3002/api/erp/status
+curl http://localhost:3002/api/health
+```
+
+## Quality checks
+
+Run every check before creating a feature commit:
+
+```sh
+npm run lint
+npm run typecheck
+npm run build
+```
+
 # 🛠️ Tech Stack
 
 The exact implementation can vary depending on the hackathon architecture.

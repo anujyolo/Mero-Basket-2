@@ -5,9 +5,11 @@ import {
   Boxes,
   ClipboardCheck,
   Database,
+  ExternalLink,
   Factory,
   Gauge,
   HomeIcon,
+  KeyRound,
   Package,
   PackageCheck,
   ShieldCheck,
@@ -15,6 +17,8 @@ import {
   User,
   Users,
 } from "lucide-react";
+
+import { getBusinessCentralConfig } from "@/server/business-central/config";
 
 const kpiCards = [
   {
@@ -101,6 +105,8 @@ function KpiCard({ card }: { card: (typeof kpiCards)[number] }) {
 }
 
 export default function Home() {
+  const businessCentral = getBusinessCentralConfig();
+
   return (
     <main id="top" className="min-h-screen bg-[var(--canvas)] pb-36 text-[var(--navy)]">
       <section className="mx-auto w-full max-w-[1860px] px-5 py-12 sm:px-8 lg:px-10">
@@ -110,6 +116,35 @@ export default function Home() {
           <p className="mt-4 max-w-6xl text-xl leading-9 text-[var(--muted)]">
             The homepage starts with the most important ERP numbers first, followed by supporting context underneath.
           </p>
+
+          <div className="mt-7 grid gap-4 lg:grid-cols-3">
+            <a
+              href={businessCentral.webUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="flex items-center justify-between gap-4 rounded-[20px] border border-[var(--border)] bg-[var(--panel)] px-6 py-5 shadow-[var(--shadow-sm)]"
+            >
+              <span>
+                <span className="block text-xs font-black uppercase tracking-[0.14em] text-[var(--muted-light)]">ERP web target</span>
+                <span className="mt-2 block text-lg font-black">{businessCentral.company}</span>
+              </span>
+              <ExternalLink className="size-6 text-[var(--blue)]" aria-hidden="true" />
+            </a>
+            <div className="flex items-center justify-between gap-4 rounded-[20px] border border-[var(--border)] bg-[var(--panel)] px-6 py-5 shadow-[var(--shadow-sm)]">
+              <span>
+                <span className="block text-xs font-black uppercase tracking-[0.14em] text-[var(--muted-light)]">Credentials</span>
+                <span className="mt-2 block text-lg font-black">{businessCentral.hasCredentials ? "Configured locally" : "Add to .env.local"}</span>
+              </span>
+              <KeyRound className="size-6 text-[var(--gold)]" aria-hidden="true" />
+            </div>
+            <div className="flex items-center justify-between gap-4 rounded-[20px] border border-[var(--border)] bg-[var(--panel)] px-6 py-5 shadow-[var(--shadow-sm)]">
+              <span>
+                <span className="block text-xs font-black uppercase tracking-[0.14em] text-[var(--muted-light)]">Data service</span>
+                <span className="mt-2 block text-lg font-black">{businessCentral.serviceBaseUrl ? "Ready to test" : "OData/API URL needed"}</span>
+              </span>
+              <Database className="size-6 text-[var(--navy)]" aria-hidden="true" />
+            </div>
+          </div>
 
           <div className="mt-8 grid gap-8 xl:grid-cols-3">
             {kpiCards.map((card) => (
