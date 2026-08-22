@@ -210,17 +210,20 @@ export function BarChart({
   valueFormatter,
   axisFormatter,
   note,
+  tone = "navy",
 }: {
   title: string;
   bars: { label: string; amount: number; height: number }[];
   valueFormatter: (value: number) => string;
   axisFormatter?: (value: number) => string;
   note?: string;
+  tone?: "navy" | "green" | "gold";
 }) {
   const max = Math.max(...bars.map((bar) => bar.amount), 0);
   const ticks = [max, max * 0.75, max * 0.5, max * 0.25, 0];
   const formatAxis = axisFormatter || valueFormatter;
   const hasPositiveValues = bars.some((bar) => bar.amount > 0);
+  const barClassName = tone === "green" ? "bg-emerald-500" : tone === "gold" ? "bg-[var(--gold)]" : "bg-[var(--navy)]";
 
   return (
     <article className="chart-container">
@@ -249,7 +252,7 @@ export function BarChart({
                 {bars.map((bar) => (
                   <div key={bar.label} className="flex min-w-12 flex-1 flex-col items-center justify-end gap-2">
                     <span
-                      className="premium-chart-bar w-full bg-[var(--navy)]"
+                      className={`premium-chart-bar w-full ${barClassName}`}
                       title={`${bar.label}: ${valueFormatter(bar.amount)}`}
                       style={{ height: `${Math.min(96, Math.max(bar.amount > 0 ? 6 : 0, bar.height))}%` }}
                     />
@@ -269,7 +272,9 @@ export function ComboBarChart({
   title,
   bars,
   note,
+  firstLabel = "Production Output",
   middleLabel = "Purchases",
+  thirdLabel = "Revenue",
 }: {
   title: string;
   bars: {
@@ -282,7 +287,9 @@ export function ComboBarChart({
     revenueAmount?: string;
   }[];
   note?: string;
+  firstLabel?: string;
   middleLabel?: string;
+  thirdLabel?: string;
 }) {
   const hasPositiveValues = bars.some((bar) => bar.production > 0 || bar.purchases > 0 || bar.revenue > 0);
 
@@ -291,9 +298,9 @@ export function ComboBarChart({
       <h3 className="chart-title">{title}</h3>
       {note ? <p className="chart-subtitle max-w-5xl">{note}</p> : null}
       <div className="mt-5 flex flex-wrap gap-4 text-sm font-black">
-        <span className="text-emerald-600">Production Output</span>
+        <span className="text-emerald-600">{firstLabel}</span>
         <span className="text-[var(--gold)]">{middleLabel}</span>
-        <span className="text-[var(--navy)]">Revenue</span>
+        <span className="text-[var(--navy)]">{thirdLabel}</span>
       </div>
       <div className="premium-chart-surface mt-8 overflow-x-auto p-4">
       <div className="premium-chart-axis relative flex h-[360px] min-w-[48rem] items-end gap-5 px-4 pb-4">
@@ -301,9 +308,9 @@ export function ComboBarChart({
         {bars.map((bar) => (
           <div key={bar.label} className="flex flex-1 flex-col items-center justify-end gap-2">
             <span className="flex h-full w-full items-end justify-center gap-1">
-              <span className="premium-chart-bar w-3 bg-emerald-500" title={`Production ${bar.label}: ${bar.productionAmount || `${bar.production}%`}`} style={{ height: `${bar.production}%` }} />
+              <span className="premium-chart-bar w-3 bg-emerald-500" title={`${firstLabel} ${bar.label}: ${bar.productionAmount || `${bar.production}%`}`} style={{ height: `${bar.production}%` }} />
               <span className="premium-chart-bar w-3 bg-[var(--gold)]" title={`${middleLabel} ${bar.label}: ${bar.purchasesAmount || `${bar.purchases}%`}`} style={{ height: `${bar.purchases}%` }} />
-              <span className="premium-chart-bar w-3 bg-[var(--navy)]" title={`Revenue ${bar.label}: ${bar.revenueAmount || `${bar.revenue}%`}`} style={{ height: `${bar.revenue}%` }} />
+              <span className="premium-chart-bar w-3 bg-[var(--navy)]" title={`${thirdLabel} ${bar.label}: ${bar.revenueAmount || `${bar.revenue}%`}`} style={{ height: `${bar.revenue}%` }} />
             </span>
             <span className="text-xs font-semibold text-[var(--text-light)] [writing-mode:vertical-rl] sm:[writing-mode:horizontal-tb]">{bar.label}</span>
           </div>
