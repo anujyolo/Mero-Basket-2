@@ -4,13 +4,19 @@ import {
   BarChart3,
   Boxes,
   Building2,
+  ClipboardCheck,
   Database,
   Factory,
+  Gauge,
   Leaf,
   Package,
+  PackageCheck,
   RotateCcw,
   Send,
+  ShieldCheck,
+  ShoppingCart,
   User,
+  Users,
   X,
 } from "lucide-react";
 
@@ -18,11 +24,11 @@ import { getBusinessCentralConfig } from "@/server/business-central/config";
 
 const projectCards = [
   {
-    title: "AG Health",
-    description: "Open the ERP dashboard, sales analysis, production, raw materials, and AG Health operations.",
+    title: "AZL",
+    description: "Open the AZ Health ERP dashboard, sales, purchases, stock, production, finance, and operations.",
     icon: Factory,
     accent: "factory",
-    action: "Open AG Health",
+    action: "Open AZL",
   },
   {
     title: "Parvati Agro",
@@ -39,23 +45,36 @@ const guidedQuestions = ["Production summary", "Inventory detail", "Receivables"
 
 const snapshotCards = [
   {
-    label: "Business Central sales",
+    label: "Sales data",
     value: "Awaiting live sync",
-    note: "Ready for 12-month sales once the Business Central service URL is provided.",
+    note: "Invoices, credit memos, customers, monthly sales, and item-wise sales analysis.",
     icon: BarChart3,
   },
   {
-    label: "Customer receivables",
+    label: "Purchase data",
     value: "Awaiting live sync",
-    note: "Will use the AG Health customer trial balance feed after the connector is mapped.",
-    icon: Banknote,
+    note: "Purchase invoices, vendors, costs, purchase trends, and item replenishment analysis.",
+    icon: ShoppingCart,
   },
   {
-    label: "Raw material stock",
+    label: "All stock",
     value: "Awaiting live sync",
-    note: "Prepared for raw material stock, positive quantities, and low-stock alerts.",
+    note: "Raw materials, finished goods, packaging, item ledger entries, and current availability.",
     icon: Boxes,
   },
+] as const;
+
+const azlDataGroups = [
+  { title: "Raw Materials", detail: "Material balances, item cards, unit costs, and low-stock flags.", icon: Package },
+  { title: "Finished Goods", detail: "Finished inventory, available quantity, value, and movement.", icon: PackageCheck },
+  { title: "Production Entries", detail: "Production output, consumption, batch entries, and yield.", icon: Factory },
+  { title: "Orders", detail: "Sales orders, purchase orders, open orders, and fulfillment state.", icon: ShoppingCart },
+  { title: "Notifications", detail: "ERP alerts, operational reminders, and exception messages.", icon: Building2 },
+  { title: "Bank Balances", detail: "Bank accounts, balances, OD separation, and cash position.", icon: Banknote },
+  { title: "Approval Requests", detail: "Pending approvals, requester, amount, and owner action.", icon: ClipboardCheck },
+  { title: "Users", detail: "ERP users, roles, access level, and active account status.", icon: Users },
+  { title: "Audit Logs", detail: "Important changes, access trails, and sensitive activity.", icon: ShieldCheck },
+  { title: "Rate Limits", detail: "Connector limits, sync throttling, retries, and API health.", icon: Gauge },
 ] as const;
 
 function ProjectCard({ project }: { project: (typeof projectCards)[number] }) {
@@ -155,7 +174,7 @@ export default function Home() {
             </span>
             <span>
               <span className="block text-xl font-black leading-tight">Factory Manager</span>
-              <span className="block text-xs font-black uppercase tracking-[0.14em] text-[var(--gold)]">Project Selection</span>
+            <span className="block text-xs font-black uppercase tracking-[0.14em] text-[var(--gold)]">AZL Project Selection</span>
             </span>
           </a>
 
@@ -163,7 +182,7 @@ export default function Home() {
             <div className="rounded-2xl border border-[var(--border)] bg-[var(--cream)] px-5 py-3">
               <p className="text-xs font-black uppercase tracking-[0.12em] text-[var(--text-light)]">Project</p>
               <div className="mt-2 flex gap-2">
-                <span className="rounded-full bg-white px-4 py-2 text-sm font-black shadow-sm">AG Health</span>
+                <span className="rounded-full bg-white px-4 py-2 text-sm font-black shadow-sm">AZL</span>
                 <span className="rounded-full bg-white px-4 py-2 text-sm font-black shadow-sm">Parvati Agro</span>
               </div>
             </div>
@@ -188,7 +207,7 @@ export default function Home() {
           Choose A Project Space
         </h1>
         <p className="mt-6 max-w-5xl text-lg leading-8 text-[var(--ink)]">
-          This workspace has separate sections so AG Health and Parvati Agro can be managed independently while sharing the same premium ERP command center.
+          This workspace has separate sections for AZL and Parvati Agro. We are actively building the AZ Health side, with ERP data dashboards for sales, purchases, stock, production, finance, approvals, users, and system activity.
         </p>
 
         <div className="mt-20 grid gap-8 md:grid-cols-2">
@@ -198,8 +217,8 @@ export default function Home() {
         </div>
 
         <section id="ag-health" className="mt-16">
-          <p className="text-sm font-black uppercase tracking-[0.2em] text-[var(--navy)]">AG Health Live</p>
-          <h2 className="mt-4 text-3xl font-black tracking-tight">Business Central connection</h2>
+          <p className="text-sm font-black uppercase tracking-[0.2em] text-[var(--navy)]">AZL / AZ Health Live</p>
+          <h2 className="mt-4 text-3xl font-black tracking-tight">ERP dashboard map</h2>
           <div className="mt-6 grid gap-4 md:grid-cols-3">
             <article className="status-card">
               <Database className="size-7 text-[var(--blue)]" aria-hidden="true" />
@@ -233,6 +252,29 @@ export default function Home() {
                 </article>
               );
             })}
+          </div>
+
+          <div className="mt-6 rounded-[28px] border border-[var(--border)] bg-white/72 p-5 shadow-[var(--shadow-soft)]">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <p className="text-xs font-black uppercase tracking-[0.16em] text-[var(--text-light)]">Data we will extract</p>
+                <h3 className="mt-2 text-2xl font-black text-[var(--navy)]">AZL ERP modules</h3>
+              </div>
+              <span className="rounded-full bg-[var(--badge)] px-4 py-2 text-sm font-black text-[var(--navy)]">10 groups ready</span>
+            </div>
+            <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+              {azlDataGroups.map((group) => {
+                const Icon = group.icon;
+
+                return (
+                  <article key={group.title} className="data-card">
+                    <Icon className="size-6 text-[var(--navy)]" aria-hidden="true" />
+                    <h4 className="mt-4 font-black text-[var(--ink)]">{group.title}</h4>
+                    <p className="mt-2 text-sm leading-6 text-[var(--text)]">{group.detail}</p>
+                  </article>
+                );
+              })}
+            </div>
           </div>
         </section>
 

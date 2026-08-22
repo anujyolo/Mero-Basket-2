@@ -133,12 +133,18 @@ a {
 }
 
 .status-card,
-.snapshot-card {
+.snapshot-card,
+.data-card {
   border: 1px solid var(--border);
   border-radius: 1.35rem;
   background: rgba(255, 255, 255, 0.82);
   padding: 1.5rem;
   box-shadow: var(--shadow-soft);
+}
+
+.data-card {
+  min-height: 12rem;
+  background: rgba(248, 251, 255, 0.9);
 }
 
 @media (max-width: 1180px) {
