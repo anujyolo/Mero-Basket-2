@@ -19,7 +19,7 @@ export default async function SalesAnalysisPage() {
       <HeroPanel
         eyebrow="Sales Analysis"
         title="Sales trend and product drilldown"
-        description="Clear sales reporting: money totals from the live SalesDashboard feed, plus product/customer/month filtering from sales order lines."
+        description="Sales totals, product sales, dealer sales, and location filters in one page."
         stats={[
           { label: "Total sales", value: formatNpr(data.salesAnalysis.totalSales), note: "Total in the analysis window.", icon: dashboardIcons.BarChart3 },
           { label: "Current month", value: formatNpr(data.salesAnalysis.currentMonthSales), note: latestMonth, icon: dashboardIcons.BarChart3 },
@@ -34,7 +34,7 @@ export default async function SalesAnalysisPage() {
       />
       <section className="mt-10">
         <SectionHeader eyebrow="Data meaning" title="What this sales data shows">
-          The top KPI and charts are financial sales totals from Business Central SalesDashboard. The product filter below uses salesDocumentLines joined with SalesOrder, so you can search products like M5 and filter by month and customer/place.
+          The top cards show sales money. The filter below lets you search products like M5 and filter by month, dealer, and location.
         </SectionHeader>
         <div className="mt-6 grid gap-4 rounded-[28px] border border-[var(--border)] bg-white p-6 shadow-[var(--shadow-soft)] md:grid-cols-3">
           <MetricCard label="Financial source" value="SalesDashboard" note="Used for total sales, monthly sales, yearly sales, and revenue trend charts." icon={dashboardIcons.BarChart3} />
@@ -60,8 +60,8 @@ export default async function SalesAnalysisPage() {
         <MetricCard label="Growth" value={formatPercent(data.salesAnalysis.growthPercentage)} note="Current vs previous month." icon={dashboardIcons.BarChart3} />
       </div>
       <div className="mt-8 grid gap-6 xl:grid-cols-2">
-        <BarChart title="Monthly Sales Trend" bars={data.salesAnalysis.monthlyTrend} valueFormatter={formatNpr} axisFormatter={compactNpr} note="Exact Sales_Amount_Actual grouped by Posting_Date month." />
-        <BarChart title="Monthly Cost / COGS Trend" bars={data.salesAnalysis.monthlyCostTrend} valueFormatter={formatNpr} axisFormatter={compactNpr} tone="gold" note="Exact Cost_Amount_Actual grouped by Posting_Date month." />
+        <BarChart title="Monthly Sales Trend" bars={data.salesAnalysis.monthlyTrend} valueFormatter={formatNpr} axisFormatter={compactNpr} note="Sales value by month." />
+        <BarChart title="Monthly Cost Trend" bars={data.salesAnalysis.monthlyCostTrend} valueFormatter={formatNpr} axisFormatter={compactNpr} tone="gold" note="Cost value by month." />
         <BarChart title="Yearly Sales Trend" bars={data.salesAnalysis.yearlyTrend} valueFormatter={formatNpr} axisFormatter={compactNpr} />
       </div>
       <div className="mt-8">
@@ -70,8 +70,8 @@ export default async function SalesAnalysisPage() {
       <article className="chart-container mt-8">
         <div className="chart-header">
           <div>
-            <h3 className="chart-title">Exact Sales Field Trace</h3>
-            <p className="chart-subtitle">ERP fields used for sales totals, product search, dealer analysis, and location drilldown.</p>
+            <h3 className="chart-title">How Sales Data Is Calculated</h3>
+            <p className="chart-subtitle">Where each sales number and filter comes from.</p>
           </div>
         </div>
         <DataTable

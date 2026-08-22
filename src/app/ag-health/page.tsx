@@ -93,7 +93,7 @@ export default async function AGHealthDashboard() {
     {
       label: "This Month Sales",
       value: formatNpr(latestRevenue),
-      detail: latestSalesTrendMonth ? `${latestSalesTrendMonth.label} from live Business Central SalesDashboard by Posting_Date.` : "Waiting for a confirmed live sales month.",
+      detail: latestSalesTrendMonth ? `${latestSalesTrendMonth.label} sales from Business Central.` : "Waiting for a confirmed live sales month.",
     },
     {
       label: "12-Month Sales",
@@ -108,14 +108,14 @@ export default async function AGHealthDashboard() {
     {
       label: "Latest Gross Margin",
       value: latestGrossMargin === null ? "ERP pending" : `${latestGrossMargin.toFixed(1)}%`,
-      detail: "Calculated from latest sales revenue minus Cost_Amount_Actual.",
+      detail: "Sales left after cost, shown as a percentage.",
     },
   ];
   const operationsStats = [
     {
-      label: "ERP RM Items",
+      label: "Raw Material Items",
       value: rawMaterialRows.length.toLocaleString("en-US"),
-      detail: "Itemcard rows classified as RM/raw material in this project’s ERP mapping.",
+      detail: "Raw material items found in Business Central.",
     },
     {
       label: "Positive Stock Items",
@@ -125,7 +125,7 @@ export default async function AGHealthDashboard() {
     {
       label: "Latest Purchases",
       value: formatNpr(latestCost),
-      detail: latestCostTrendMonth ? `Mapped from SalesDashboard Cost_Amount_Actual in ${latestCostTrendMonth.label} until a separate purchase-total feed is available.` : "Waiting for live monthly purchase/cost totals.",
+      detail: latestCostTrendMonth ? `Latest available purchase/cost value for ${latestCostTrendMonth.label}.` : "Waiting for live monthly purchase/cost totals.",
     },
     {
       label: "Latest Production",
@@ -135,7 +135,7 @@ export default async function AGHealthDashboard() {
   ];
   const fieldTraceRows = [
     ["Sales revenue", "SalesDashboard", "Posting_Date, Sales_Amount_Actual"],
-    ["Sales cost / COGS", "SalesDashboard", "Posting_Date, Cost_Amount_Actual"],
+    ["Sales cost", "SalesDashboard", "Posting_Date, Cost_Amount_Actual"],
     ["Inventory and raw materials", "Itemcard", "Inventory_Posting_Group, Inventory, Unit_Cost, Last_Direct_Cost"],
     ["Production output", "Finishedproductionordgers", "Quantity, Finished_Date, Ending_Date, Starting_Date"],
     ["Orders", "SalesOrder + salesDocumentLines", "No, Status, Amount, quantity, outstandingQuantity"],
@@ -181,9 +181,9 @@ export default async function AGHealthDashboard() {
       <section className="mt-10">
         <p className="text-sm font-black uppercase tracking-[0.2em] text-[var(--navy)]">Overview</p>
         <h2 className="mt-4 text-4xl font-black tracking-tight">Executive Snapshot</h2>
-        <p className="mt-4 max-w-5xl text-xl leading-9 text-[var(--text)]">Large cards are placed first. Each card names the ERP source so the numbers are easier to understand.</p>
+        <p className="mt-4 max-w-5xl text-xl leading-9 text-[var(--text)]">Important business numbers are shown first. Each card says what the number means.</p>
         <div className="mt-8 grid gap-6 xl:grid-cols-3">
-          <ExecutiveKpiCard title="Business Central Sales (12-Month)" value={formatNpr(data.dashboard.totalSales)} detail="Live Business Central sales from the connected SalesDashboard feed, matching the reference dashboard’s rolling executive sales card." source="SalesDashboard" icon={dashboardIcons.BarChart3} />
+          <ExecutiveKpiCard title="Business Central Sales (12-Month)" value={formatNpr(data.dashboard.totalSales)} detail="Total sales for the visible 12-month Business Central window." source="Sales" icon={dashboardIcons.BarChart3} />
           <ExecutiveKpiCard title="Business Central Receivables" value={formatNpr(data.dashboard.receivables)} detail="Customer receivables from the live trial balance row mapped for Sundry Debtor." source="ExcelTemplateTrialBalance" icon={dashboardIcons.ReceiptText} />
           <ExecutiveKpiCard title="Business Central Bank Balance" value={formatNpr(data.dashboard.bankBalance)} detail={`Current live Business Central bank balance across ${data.dashboard.bankRows || 0} BANK rows.`} source="Bankacccard1" accent="gold" icon={dashboardIcons.Banknote} />
         </div>
@@ -203,22 +203,22 @@ export default async function AGHealthDashboard() {
             bars={data.salesAnalysis.monthlyTrend}
             valueFormatter={formatNpr}
             axisFormatter={compactNpr}
-            note="Monthly sales placement follows the reference dashboard, while values come from this project’s ERP feed."
+            note="Month-by-month sales. Each bar shows sales for that month."
           />
           <ComboBarChart
-            title="Business Central Production Output, Purchases, and Revenue"
+            title="Production, Purchases, and Sales"
             bars={latestProductionBars}
             middleLabel="Purchases / Cost"
-            note="This follows the 4002 placement. Production and revenue are exact ERP values; the purchase column currently uses the exact available Cost_Amount_Actual field until a separate monthly purchase-total feed is mapped."
+            note="Compare how much was produced, how much cost/purchase value was recorded, and how much was sold each month."
           />
           <div className="grid gap-6 xl:grid-cols-2">
             <ComboBarChart
-              title="Revenue, COGS, and Gross Margin"
+              title="Sales, Cost, and Gross Margin"
               bars={revenueCostBars}
               firstLabel="Revenue"
-              middleLabel="COGS / Cost"
+              middleLabel="Cost"
               thirdLabel="Gross Margin"
-              note="Reference dashboard placement for revenue, COGS/cost, and margin comparison. Values come from SalesDashboard revenue and Cost_Amount_Actual; gross margin is calculated from those two fields."
+              note="Shows sales, cost, and remaining margin by month."
             />
             <BarChart
               title="Production Trend"
@@ -239,13 +239,13 @@ export default async function AGHealthDashboard() {
       <section className="mt-10">
         <p className="text-sm font-black uppercase tracking-[0.2em] text-[var(--navy)]">Operations</p>
         <h2 className="mt-4 text-4xl font-black tracking-tight">Materials and Production Context</h2>
-        <p className="mt-4 max-w-5xl text-xl leading-9 text-[var(--text)]">Raw-material inventory sits in its own dashboard section with a compact operational summary above the detail table.</p>
+        <p className="mt-4 max-w-5xl text-xl leading-9 text-[var(--text)]">This section explains what material stock is available and which items have the highest value.</p>
         <SummaryStrip stats={operationsStats} />
         <article className="chart-container mt-8">
           <div className="chart-header">
             <div>
               <h3 className="chart-title">Business Central Materials</h3>
-              <p className="chart-subtitle">Exact live material rows from Itemcard. When RM rows are mapped, this table focuses on raw materials; otherwise it shows the highest-value inventory rows available.</p>
+              <p className="chart-subtitle">Material stock from Business Central. If raw-material rows are available, they appear first; otherwise the table shows highest-value inventory items.</p>
             </div>
             <div className="rounded-2xl bg-[var(--soft)] px-4 py-3 text-sm font-black text-[var(--navy)]">
               {formatQuantity(rawMaterialStock)} stock · {positiveRawMaterialRows.length} positive RM rows
@@ -267,8 +267,8 @@ export default async function AGHealthDashboard() {
 
       <section className="mt-10">
         <p className="text-sm font-black uppercase tracking-[0.2em] text-[var(--navy)]">Workspace</p>
-        <h2 className="mt-4 text-4xl font-black tracking-tight">Modules and Field Trace</h2>
-        <p className="mt-4 max-w-5xl text-xl leading-9 text-[var(--text)]">Navigation and exact field mappings are grouped together so the next destination and source definitions stay side by side.</p>
+        <h2 className="mt-4 text-4xl font-black tracking-tight">Modules and Data Meaning</h2>
+        <p className="mt-4 max-w-5xl text-xl leading-9 text-[var(--text)]">Open a report, and see where each dashboard number comes from.</p>
         <div className="mt-8 grid gap-6 xl:grid-cols-2">
           <article className="chart-container">
             <div className="chart-header">
@@ -295,8 +295,8 @@ export default async function AGHealthDashboard() {
           <article className="chart-container">
             <div className="chart-header">
               <div>
-                <h3 className="chart-title">Exact Field Trace</h3>
-                <p className="chart-subtitle">The exact live keys used by this dashboard’s ERP mapper.</p>
+                <h3 className="chart-title">How This Data Is Calculated</h3>
+                <p className="chart-subtitle">Plain source notes for each number on this dashboard.</p>
               </div>
             </div>
             <DataTable headers={["Dashboard data", "ERP source", "Fields used"]} rows={fieldTraceRows} />

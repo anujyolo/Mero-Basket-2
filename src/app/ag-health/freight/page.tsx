@@ -79,8 +79,8 @@ export default async function FreightPage() {
       <article className="mt-8 chart-container">
         <div className="chart-header">
           <div>
-            <h3 className="chart-title">Exact Freight Field Trace</h3>
-            <p className="chart-subtitle">ERP fields used to identify freight rows and calculate total freight expense.</p>
+            <h3 className="chart-title">How Freight Data Is Calculated</h3>
+            <p className="chart-subtitle">Where each freight number comes from.</p>
           </div>
         </div>
         <DataTable

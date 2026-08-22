@@ -52,7 +52,7 @@ export default async function InventoryReportPage() {
     <AGHealthShell active="inventory-report" company={data.company} connected={data.connected}>
       <HeroPanel
         eyebrow="Inventory Report"
-        title="ERP inventory value, stock, and category separation"
+        title="Inventory value, stock, and categories"
         description="This page follows the reference dashboard pattern: headline numbers first, category chart second, and separated inventory tables below."
         stats={[
           { label: "Total inventory value", value: formatNpr(data.dashboard.totalInventoryValue), note: "Stock × purchase/cost rate.", icon: dashboardIcons.Boxes },
@@ -68,7 +68,7 @@ export default async function InventoryReportPage() {
       />
       <section className="mt-10">
         <SectionHeader eyebrow="Category Value" title="Inventory by category">
-          Inventory is grouped by ERP posting group/category. This explains what stock is raw material, packing material, finished goods, or another ERP item group before the detail tables.
+          Inventory is separated by category, so raw materials, packing materials, finished goods, and other items do not get mixed.
         </SectionHeader>
         <SummaryStrip
           stats={[
@@ -134,8 +134,8 @@ export default async function InventoryReportPage() {
       <article className="chart-container mt-8">
         <div className="chart-header">
           <div>
-            <h3 className="chart-title">Exact Inventory Field Trace</h3>
-            <p className="chart-subtitle">These are the ERP fields used to calculate the inventory cards, charts, and tables on this page.</p>
+            <h3 className="chart-title">How Inventory Data Is Calculated</h3>
+            <p className="chart-subtitle">Where each inventory number comes from.</p>
           </div>
         </div>
         <DataTable

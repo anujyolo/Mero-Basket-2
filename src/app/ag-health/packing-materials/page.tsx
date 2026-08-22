@@ -52,7 +52,7 @@ export default async function PackingMaterialsPage() {
       <HeroPanel
         eyebrow="Packing Materials"
         title="Packing material stock dashboard"
-        description="This page uses the same premium card-and-chart rhythm as the reference dashboard, but it is strictly filtered to ERP posting group PM."
+        description="This page shows only packing materials. Raw materials and finished goods are not mixed here."
         stats={[
           { label: "Packing material stock", value: formatQuantity(data.dashboard.packingMaterialStock), note: "Only PM category stock.", icon: dashboardIcons.PackageCheck },
           { label: "Visible PM rows", value: totalRows.toLocaleString("en-US"), note: "No raw materials or finished goods.", icon: dashboardIcons.Route },
@@ -67,7 +67,7 @@ export default async function PackingMaterialsPage() {
       />
       <section className="mt-10">
         <SectionHeader eyebrow="PM Overview" title="Packing material snapshot">
-          This section is strictly filtered to ERP posting group PM. It explains packing stock, purchase quantity, remaining quantity, and current PM value without mixing raw materials or finished goods.
+          This section explains packing stock, purchased quantity, remaining quantity, and current value without mixing other inventory.
         </SectionHeader>
         <SummaryStrip
           stats={[
@@ -116,8 +116,8 @@ export default async function PackingMaterialsPage() {
       <article className="chart-container mt-8">
         <div className="chart-header">
           <div>
-            <h3 className="chart-title">Exact Packing Field Trace</h3>
-            <p className="chart-subtitle">ERP fields used to calculate packing material cards, charts, and tables.</p>
+            <h3 className="chart-title">How Packing Data Is Calculated</h3>
+            <p className="chart-subtitle">Where each packing material number comes from.</p>
           </div>
         </div>
         <DataTable

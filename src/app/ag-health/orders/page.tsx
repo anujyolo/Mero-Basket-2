@@ -67,8 +67,8 @@ export default async function OrdersPage() {
       <article className="mt-8 chart-container">
         <div className="chart-header">
           <div>
-            <h3 className="chart-title">Exact Orders Field Trace</h3>
-            <p className="chart-subtitle">ERP fields used to calculate order cards, status chart, and order table.</p>
+            <h3 className="chart-title">How Order Data Is Calculated</h3>
+            <p className="chart-subtitle">Where each order number, product, and status comes from.</p>
           </div>
         </div>
         <DataTable

@@ -24,7 +24,7 @@ function OutputChart({ bars }: { bars: { label: string; amount: number; height: 
   const hasPositiveValues = bars.some((bar) => bar.amount > 0);
   return (
     <article className="chart-container">
-      <div className="chart-header"><div><h3 className="chart-title">Business Central Production Output</h3><p className="chart-subtitle">Monthly production output from existing Business Central production rows.</p></div><span className="kpi-trend">{bars.length} months</span></div>
+      <div className="chart-header"><div><h3 className="chart-title">Monthly Production Output</h3><p className="chart-subtitle">How many pieces were produced each month.</p></div><span className="kpi-trend">{bars.length} months</span></div>
       <div className="premium-chart-surface mt-8 grid grid-cols-[5.8rem_minmax(0,1fr)] gap-4 p-4">
         <div className="flex h-[360px] flex-col justify-between pb-10 text-right text-[11px] font-black text-[var(--text-light)]">{ticks.map((tick, index) => <span key={index}>{compactUnits(tick)}</span>)}</div>
         <div className="min-w-0 overflow-x-auto">
@@ -61,7 +61,7 @@ function ComboChart({ bars, revenues }: { bars: { label: string; height: number 
   const hasPositiveValues = bars.some((bar) => bar.height > 0) || revenueMax > 0;
   return (
     <article className="chart-container">
-      <div className="chart-header"><div><h3 className="chart-title">Production vs Revenue</h3><p className="chart-subtitle">Production output and sales revenue share the same premium dashboard placement.</p></div></div>
+      <div className="chart-header"><div><h3 className="chart-title">Production vs Sales</h3><p className="chart-subtitle">Compare pieces produced with sales value by month.</p></div></div>
       <div className="mt-5 flex gap-4 text-sm font-black"><span className="text-emerald-600">Production</span><span className="text-[var(--navy)]">Revenue</span></div>
       <div className="premium-chart-surface mt-8 overflow-x-auto p-4">
       <div className="premium-chart-axis relative flex h-[360px] min-w-[48rem] items-end gap-5 px-4 pb-4">
@@ -82,7 +82,7 @@ function AreaChart({ bars }: { bars: { label: string; height: number }[] }) {
 
   return (
     <article className="chart-container">
-      <div className="chart-header"><div><h3 className="chart-title">Production Trend</h3><p className="chart-subtitle">Green area-style trend for active production months.</p></div></div>
+      <div className="chart-header"><div><h3 className="chart-title">Production Trend</h3><p className="chart-subtitle">Simple month-by-month production movement.</p></div></div>
       <div className="premium-chart-surface mt-8 overflow-x-auto p-4">
       <div className="premium-chart-axis relative flex h-[360px] min-w-[42rem] items-end gap-4 px-4 pb-4">
         {!hasPositiveValues ? <div className="premium-chart-empty">No positive production trend values in this view.</div> : null}
@@ -109,8 +109,8 @@ export default async function ProductionPage() {
   const latestMonth = data.production.monthlyTrend.at(-1);
   const summaryStats = [
     { label: "Latest output month", value: latestMonth ? formatQuantity(latestMonth.amount, "pcs") : "ERP pending", detail: latestMonth ? `${latestMonth.label} production output.` : "No monthly production value mapped yet." },
-    { label: "FG stock value", value: formatNpr(fgValue), detail: `${fg.length.toLocaleString("en-US")} finished-good item rows.` },
-    { label: "SMFG stock value", value: formatNpr(smfgValue), detail: `${smfg.length.toLocaleString("en-US")} semi-finished item rows.` },
+    { label: "Finished Goods Value", value: formatNpr(fgValue), detail: `${fg.length.toLocaleString("en-US")} finished product rows.` },
+    { label: "Semi-Finished Value", value: formatNpr(smfgValue), detail: `${smfg.length.toLocaleString("en-US")} partly finished product rows.` },
     { label: "Production rows", value: data.production.rows.length.toLocaleString("en-US"), detail: "Finished production order rows loaded from ERP." },
   ];
 
@@ -119,8 +119,8 @@ export default async function ProductionPage() {
       <section className="rounded-[32px] border border-[var(--border)] bg-white/74 p-7 shadow-[var(--shadow)] lg:p-9">
         <p className="text-sm font-black uppercase tracking-[0.2em] text-[var(--gold)]">Production</p>
         <h1 className="mt-6 max-w-5xl text-4xl font-black tracking-tight text-[var(--ink)] lg:text-6xl">Production Management</h1>
-        <p className="mt-5 max-w-5xl text-lg leading-8 text-[var(--text)]">Live Business Central production output and FG/SMFG stock in the same premium dashboard layout as AG Health.</p>
-        <div className="mt-6 inline-flex rounded-full bg-[var(--soft)] px-4 py-2 text-xs font-black uppercase tracking-[0.1em] text-[var(--text)]">ERP source: Finishedproductionordgers + Itemcard FG/SMFG</div>
+        <p className="mt-5 max-w-5xl text-lg leading-8 text-[var(--text)]">Production output, finished goods, and semi-finished goods in one simple page.</p>
+        <div className="mt-6 inline-flex rounded-full bg-[var(--soft)] px-4 py-2 text-xs font-black uppercase tracking-[0.1em] text-[var(--text)]">Source: Business Central production and item stock</div>
       </section>
       <section className="mt-8 kpi-grid">
         <Kpi title="Latest Production" value={latest ? formatQuantity(latest.quantityProduced, "pcs") : "ERP pending"} note={latest?.productionDate || "No date mapped."} source="Finishedproductionordgers" tone="primary" />
@@ -135,16 +135,16 @@ export default async function ProductionPage() {
         <OutputChart bars={bars} />
         <div className="premium-grid-2"><ComboChart bars={bars} revenues={revenues} /><AreaChart bars={bars} /></div>
         <div className="premium-grid-2">
-          <PieChartCard title="Finished Goods vs Semi-Finished Goods" slices={mix} valueFormatter={formatNpr} />
-          <article className="chart-container"><div className="chart-header"><div><h3 className="chart-title">Live Production Stock Lines</h3><p className="chart-subtitle">Top visible FG/SMFG stock lines by current value.</p></div></div><div className="mt-6 grid gap-3">{data.production.goodsRows.slice(0, 8).map((row) => <div key={row.itemNo} className="flex items-center justify-between gap-4 rounded-2xl bg-[var(--soft)] px-4 py-3"><span className="text-sm font-black text-[var(--ink)]">{row.description}</span><span className="whitespace-nowrap text-sm font-black text-[var(--navy)]">{formatNpr(row.stockValue)}</span></div>)}</div></article>
+          <PieChartCard title="Finished vs Semi-Finished Stock Value" slices={mix} valueFormatter={formatNpr} />
+          <article className="chart-container"><div className="chart-header"><div><h3 className="chart-title">Top Production Stock Items</h3><p className="chart-subtitle">Finished and semi-finished items with the highest current stock value.</p></div></div><div className="mt-6 grid gap-3">{data.production.goodsRows.slice(0, 8).map((row) => <div key={row.itemNo} className="flex items-center justify-between gap-4 rounded-2xl bg-[var(--soft)] px-4 py-3"><span className="text-sm font-black text-[var(--ink)]">{row.description}</span><span className="whitespace-nowrap text-sm font-black text-[var(--navy)]">{formatNpr(row.stockValue)}</span></div>)}</div></article>
         </div>
       </section>
       <div className="mt-8"><ProductionReport rows={data.production.goodsRows} /></div>
       <article className="chart-container mt-8">
         <div className="chart-header">
           <div>
-            <h3 className="chart-title">Exact Production Field Trace</h3>
-            <p className="chart-subtitle">ERP fields used to calculate production output, FG/SMFG stock, and the production stock table.</p>
+            <h3 className="chart-title">How Production Data Is Calculated</h3>
+            <p className="chart-subtitle">Where each production number comes from.</p>
           </div>
         </div>
         <DataTable
