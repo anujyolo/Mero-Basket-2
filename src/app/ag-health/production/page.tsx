@@ -21,14 +21,16 @@ function Kpi({ title, value, note, source, tone = "info" }: { title: string; val
 function OutputChart({ bars }: { bars: { label: string; amount: number; height: number }[] }) {
   const max = Math.max(...bars.map((bar) => bar.amount), 0);
   const ticks = [max, max * 0.75, max * 0.5, max * 0.25, 0];
+  const hasPositiveValues = bars.some((bar) => bar.amount > 0);
   return (
     <article className="chart-container">
       <div className="chart-header"><div><h3 className="chart-title">Business Central Production Output</h3><p className="chart-subtitle">Monthly production output from existing Business Central production rows.</p></div><span className="kpi-trend">{bars.length} months</span></div>
-      <div className="mt-8 grid grid-cols-[5.8rem_minmax(0,1fr)] gap-4 rounded-[28px] bg-[var(--soft)] p-4">
+      <div className="premium-chart-surface mt-8 grid grid-cols-[5.8rem_minmax(0,1fr)] gap-4 p-4">
         <div className="flex h-[360px] flex-col justify-between pb-10 text-right text-[11px] font-black text-[var(--text-light)]">{ticks.map((tick, index) => <span key={index}>{compactUnits(tick)}</span>)}</div>
         <div className="min-w-0 overflow-x-auto">
-          <div className="flex h-[360px] min-w-[42rem] items-end gap-3 border-b border-l border-[var(--border-strong)] px-4 pb-4">
-            {bars.map((bar) => <div key={bar.label} className="flex min-w-12 flex-1 flex-col items-center justify-end gap-2"><span className="w-full rounded-t-xl bg-[#10b981] shadow-[0_10px_22px_rgba(16,185,129,0.22)]" title={`${bar.label}: ${formatQuantity(bar.amount, "units")}`} style={{ height: `${Math.min(96, Math.max(bar.amount > 0 ? 6 : 0, bar.height))}%` }} /><span className="max-w-20 truncate text-xs font-black text-[var(--text-light)]">{bar.label}</span></div>)}
+          <div className="premium-chart-axis relative flex h-[360px] min-w-[48rem] items-end gap-6 px-4 pb-4">
+            {!hasPositiveValues ? <div className="premium-chart-empty">ERP returned production months, but no positive output values for this view.</div> : null}
+            {bars.map((bar) => <div key={bar.label} className="flex min-w-12 flex-1 flex-col items-center justify-end gap-2"><span className="premium-chart-bar w-full bg-[#10b981]" title={`${bar.label}: ${formatQuantity(bar.amount, "units")}`} style={{ height: `${Math.min(96, Math.max(bar.amount > 0 ? 6 : 0, bar.height))}%` }} /><span className="max-w-20 truncate text-xs font-black text-[var(--text-light)]">{bar.label}</span></div>)}
           </div>
         </div>
       </div>
@@ -38,26 +40,35 @@ function OutputChart({ bars }: { bars: { label: string; amount: number; height: 
 
 function ComboChart({ bars, revenues }: { bars: { label: string; height: number }[]; revenues: { amount: number }[] }) {
   const revenueMax = Math.max(...revenues.map((row) => row.amount), 0);
+  const hasPositiveValues = bars.some((bar) => bar.height > 0) || revenueMax > 0;
   return (
     <article className="chart-container">
       <div className="chart-header"><div><h3 className="chart-title">Production vs Revenue</h3><p className="chart-subtitle">Production output and sales revenue share the same premium dashboard placement.</p></div></div>
       <div className="mt-5 flex gap-4 text-sm font-black"><span className="text-emerald-600">Production</span><span className="text-[var(--navy)]">Revenue</span></div>
-      <div className="mt-8 flex h-[360px] items-end gap-3 overflow-x-auto border-b border-l border-[var(--border-strong)] px-4 pb-4">
+      <div className="premium-chart-surface mt-8 overflow-x-auto p-4">
+      <div className="premium-chart-axis relative flex h-[360px] min-w-[48rem] items-end gap-5 px-4 pb-4">
+        {!hasPositiveValues ? <div className="premium-chart-empty">No positive ERP values for this grouped chart yet.</div> : null}
         {bars.map((bar, index) => {
           const revenueHeight = revenueMax > 0 ? Math.max(6, Math.round(((revenues[index]?.amount || 0) / revenueMax) * 92)) : 0;
-          return <div key={bar.label} className="flex min-w-12 flex-1 flex-col items-center justify-end gap-2"><span className="flex h-full w-full items-end justify-center gap-1"><span className="w-3 rounded-t bg-[#10b981]" style={{ height: `${Math.max(6, bar.height)}%` }} /><span className="w-3 rounded-t bg-[var(--navy)]" style={{ height: `${revenueHeight}%` }} /></span><span className="max-w-20 truncate text-xs font-black text-[var(--text-light)]">{bar.label}</span></div>;
+          return <div key={bar.label} className="flex min-w-12 flex-1 flex-col items-center justify-end gap-2"><span className="flex h-full w-full items-end justify-center gap-1"><span className="premium-chart-bar w-3 bg-[#10b981]" style={{ height: `${bar.height > 0 ? Math.max(6, bar.height) : 0}%` }} /><span className="premium-chart-bar w-3 bg-[var(--navy)]" style={{ height: `${revenueHeight}%` }} /></span><span className="max-w-20 truncate text-xs font-black text-[var(--text-light)]">{bar.label}</span></div>;
         })}
+      </div>
       </div>
     </article>
   );
 }
 
 function AreaChart({ bars }: { bars: { label: string; height: number }[] }) {
+  const hasPositiveValues = bars.some((bar) => bar.height > 0);
+
   return (
     <article className="chart-container">
       <div className="chart-header"><div><h3 className="chart-title">Production Trend</h3><p className="chart-subtitle">Green area-style trend for active production months.</p></div></div>
-      <div className="mt-8 flex h-[360px] items-end gap-2 rounded-[28px] bg-gradient-to-t from-emerald-50 to-white px-4 pb-4">
-        {bars.map((bar) => <div key={bar.label} className="flex flex-1 flex-col items-center justify-end gap-2"><span className="w-full rounded-t-xl bg-gradient-to-t from-[#10b981] to-emerald-200" style={{ height: `${Math.max(6, bar.height)}%` }} /><span className="max-w-20 truncate text-xs font-black text-[var(--text-light)]">{bar.label}</span></div>)}
+      <div className="premium-chart-surface mt-8 overflow-x-auto p-4">
+      <div className="premium-chart-axis relative flex h-[360px] min-w-[42rem] items-end gap-4 px-4 pb-4">
+        {!hasPositiveValues ? <div className="premium-chart-empty">No positive production trend values in this view.</div> : null}
+        {bars.map((bar) => <div key={bar.label} className="flex flex-1 flex-col items-center justify-end gap-2"><span className="premium-chart-bar w-full bg-gradient-to-t from-[#10b981] to-emerald-200" style={{ height: `${bar.height > 0 ? Math.max(6, bar.height) : 0}%` }} /><span className="max-w-20 truncate text-xs font-black text-[var(--text-light)]">{bar.label}</span></div>)}
+      </div>
       </div>
     </article>
   );

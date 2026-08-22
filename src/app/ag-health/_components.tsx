@@ -220,6 +220,7 @@ export function BarChart({
   const max = Math.max(...bars.map((bar) => bar.amount), 0);
   const ticks = [max, max * 0.75, max * 0.5, max * 0.25, 0];
   const formatAxis = axisFormatter || valueFormatter;
+  const hasPositiveValues = bars.some((bar) => bar.amount > 0);
 
   return (
     <article className="chart-container">
@@ -237,17 +238,18 @@ export function BarChart({
           No live chart rows mapped yet.
         </div>
       ) : (
-        <div className="mt-6 rounded-[28px] bg-[var(--soft)] p-4">
+        <div className="premium-chart-surface mt-6 p-4">
           <div className="grid grid-cols-[5.8rem_minmax(0,1fr)] gap-4">
-            <div className="flex h-64 flex-col justify-between pb-10 text-right text-[11px] font-black leading-tight text-[var(--text-light)]">
+            <div className="flex h-[360px] flex-col justify-between pb-10 text-right text-[11px] font-black leading-tight text-[var(--text-light)]">
               {ticks.map((tick, index) => <span key={`${tick}-${index}`}>{formatAxis(tick)}</span>)}
             </div>
             <div className="min-w-0 overflow-x-auto">
-              <div className="flex h-64 min-w-[38rem] items-end gap-3 border-b border-l border-[var(--border-strong)] px-4 pb-4">
+              <div className="premium-chart-axis relative flex h-[360px] min-w-[48rem] items-end gap-6 px-4 pb-4">
+                {!hasPositiveValues ? <div className="premium-chart-empty">ERP returned chart labels, but no positive values for this view.</div> : null}
                 {bars.map((bar) => (
                   <div key={bar.label} className="flex min-w-12 flex-1 flex-col items-center justify-end gap-2">
                     <span
-                      className="w-full rounded-t-xl bg-gradient-to-t from-[var(--navy)] to-[var(--blue)] shadow-[0_10px_22px_rgba(33,63,103,0.2)]"
+                      className="premium-chart-bar w-full bg-[var(--navy)]"
                       title={`${bar.label}: ${valueFormatter(bar.amount)}`}
                       style={{ height: `${Math.min(96, Math.max(bar.amount > 0 ? 6 : 0, bar.height))}%` }}
                     />
@@ -270,6 +272,8 @@ export function ComboBarChart({
   title: string;
   bars: { label: string; production: number; purchases: number; revenue: number }[];
 }) {
+  const hasPositiveValues = bars.some((bar) => bar.production > 0 || bar.purchases > 0 || bar.revenue > 0);
+
   return (
     <article className="chart-container">
       <h3 className="chart-title">{title}</h3>
@@ -278,17 +282,20 @@ export function ComboBarChart({
         <span className="text-[var(--gold)]">Purchases</span>
         <span className="text-[var(--navy)]">Revenue</span>
       </div>
-      <div className="mt-8 flex h-72 items-end gap-3 border-b border-l border-[var(--border-strong)] px-4 pb-4">
+      <div className="premium-chart-surface mt-8 overflow-x-auto p-4">
+      <div className="premium-chart-axis relative flex h-[360px] min-w-[48rem] items-end gap-5 px-4 pb-4">
+        {!hasPositiveValues ? <div className="premium-chart-empty">No positive ERP values for this grouped chart yet.</div> : null}
         {bars.map((bar) => (
           <div key={bar.label} className="flex flex-1 flex-col items-center justify-end gap-2">
             <span className="flex h-full w-full items-end justify-center gap-1">
-              <span className="w-2 rounded-t bg-emerald-500" style={{ height: `${bar.production}%` }} />
-              <span className="w-2 rounded-t bg-[var(--gold)]" style={{ height: `${bar.purchases}%` }} />
-              <span className="w-2 rounded-t bg-[var(--navy)]" style={{ height: `${bar.revenue}%` }} />
+              <span className="premium-chart-bar w-3 bg-emerald-500" style={{ height: `${bar.production}%` }} />
+              <span className="premium-chart-bar w-3 bg-[var(--gold)]" style={{ height: `${bar.purchases}%` }} />
+              <span className="premium-chart-bar w-3 bg-[var(--navy)]" style={{ height: `${bar.revenue}%` }} />
             </span>
             <span className="text-xs font-semibold text-[var(--text-light)] [writing-mode:vertical-rl] sm:[writing-mode:horizontal-tb]">{bar.label}</span>
           </div>
         ))}
+      </div>
       </div>
     </article>
   );

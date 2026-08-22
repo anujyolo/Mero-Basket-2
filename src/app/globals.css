@@ -281,6 +281,17 @@ a {
   text-transform: uppercase;
 }
 
+.kpi-icon {
+  display: grid;
+  width: 3rem;
+  height: 3rem;
+  flex-shrink: 0;
+  place-items: center;
+  border-radius: 1rem;
+  background: var(--soft);
+  color: var(--navy);
+}
+
 .kpi-value {
   margin-top: 1.6rem;
   color: var(--navy);
@@ -314,6 +325,36 @@ a {
   font-size: 1.55rem;
   font-weight: 950;
   letter-spacing: -0.03em;
+}
+
+.premium-chart-surface {
+  border-radius: 1.75rem;
+  background-color: white;
+  background-image:
+    linear-gradient(to right, rgba(207, 216, 228, 0.58) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(207, 216, 228, 0.58) 1px, transparent 1px);
+  background-size: 9.25rem 4.7rem;
+}
+
+.premium-chart-axis {
+  border-bottom: 1px solid #9fb0c6;
+  border-left: 1px solid #9fb0c6;
+}
+
+.premium-chart-bar {
+  border-radius: 0.85rem 0.85rem 0 0;
+  box-shadow: 0 10px 22px rgba(31, 63, 103, 0.16);
+}
+
+.premium-chart-empty {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: var(--text-light);
+  font-size: 0.85rem;
+  font-weight: 950;
+  text-align: center;
 }
 
 @media (min-width: 1024px) {
