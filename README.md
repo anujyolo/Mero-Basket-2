@@ -239,80 +239,96 @@ This helps businesses understand not only **what is happening internally**, but 
 
 ---
 
-## Business Central connection
-
-The app is pointed at the AG Health Business Central web client, but real
-credentials must stay local and must never be committed to GitHub.
-
-1. Copy `.env.example` to `.env.local`.
-2. Fill in `BUSINESS_CENTRAL_USERNAME` and `BUSINESS_CENTRAL_PASSWORD`.
-3. Add `BUSINESS_CENTRAL_SERVICE_BASE_URL` when the ERP admin provides the
-   published API/OData URL.
-
-For AG Health, the current OData test endpoint is:
-
-```text
-http://erp.agilenepal.com:5048/AgHealth/ODataV4/Company(%27AG%20Health%20Live%27)/VendorLedgerEntries
-```
-
-If `/api/erp/status` returns `authentication-rejected`, the OData service is
-reachable but Business Central rejected the configured credentials. In many
-Business Central installs, OData uses a web service access key or service
-account credential rather than the normal browser-login password.
-
-Useful local checks:
-
-```sh
-curl http://localhost:3002/api/erp/status
-curl http://localhost:3002/api/health
-```
-
-## Quality checks
-
-Run every check before creating a feature commit:
-
-```sh
-npm run lint
-npm run typecheck
-npm run build
-```
-
 # 🛠️ Tech Stack
 
-The exact implementation can vary depending on the hackathon architecture.
+Mero Basket is built as a **full-stack Next.js application**, combining a modern frontend, backend API routes, database management, authentication, data visualization, email functionality, and spreadsheet processing.
 
 ### Frontend
 
-* React / Next.js
-* TypeScript
-* Tailwind CSS
-* Recharts / Chart.js
-* Framer Motion
+* **Next.js** — Full-stack React framework
+* **React** — User interface and component architecture
+* **TypeScript** — Type-safe development
+* **Tailwind CSS** — Responsive and modern UI styling
+* **Recharts** — Interactive financial dashboards and data visualizations
+* **Lucide React** — Consistent icon system
 
-### Backend
+### Backend & Database
 
-* Node.js
-* Express.js / Next.js API routes
-* REST APIs
+* **Next.js API Routes** — Server-side APIs and backend logic
+* **Prisma** — Database ORM and schema management
+* **SQLite** — Lightweight relational database
+* **Supabase CLI** — Database and development tooling
 
-### Database
+### Authentication & Communication
 
-* PostgreSQL
-* Prisma ORM
+* **NextAuth.js** — Secure user authentication and session management
+* **Nodemailer** — Email notifications and communication
 
-### AI
+### Data Processing
 
-* LLM-powered business assistant
-* Anomaly detection
-* Predictive analytics
-* Automated insight generation
+* **XLSX** — Excel/spreadsheet import and export
+* **Prisma** — Structured database access and data management
 
-### Data
+### Development & Code Quality
 
-* CSV / Excel imports
-* Transaction data
-* Inventory data
-* Market APIs
+* **ESLint** — Code quality, consistency, and linting
+
+### ⚡ Architecture
+
+```text
+                    ┌─────────────────────┐
+                    │     Next.js App     │
+                    │                     │
+                    │ React + TypeScript  │
+                    │ Tailwind CSS        │
+                    └──────────┬──────────┘
+                               │
+                    ┌──────────▼──────────┐
+                    │    API Routes       │
+                    │                     │
+                    │ Business Logic      │
+                    │ Data Processing     │
+                    │ Financial Metrics   │
+                    └──────────┬──────────┘
+                               │
+                    ┌──────────▼──────────┐
+                    │       Prisma        │
+                    │    ORM / Models     │
+                    └──────────┬──────────┘
+                               │
+                    ┌──────────▼──────────┐
+                    │       SQLite        │
+                    │      Database       │
+                    └─────────────────────┘
+
+     ┌──────────────┐     ┌──────────────┐
+     │   NextAuth   │     │   Nodemailer │
+     │ Authentication│     │    Email     │
+     └──────────────┘     └──────────────┘
+
+     ┌──────────────┐     ┌──────────────┐
+     │    XLSX      │     │   Recharts   │
+     │ Excel I/O    │     │  Analytics   │
+     └──────────────┘     └──────────────┘
+```
+
+### 📦 Core Technologies
+
+| Technology   | Purpose                          |
+| ------------ | -------------------------------- |
+| Next.js      | Full-stack application framework |
+| React        | UI and component development     |
+| TypeScript   | Type safety                      |
+| Tailwind CSS | Styling and responsive design    |
+| Prisma       | Database ORM                     |
+| SQLite       | Application database             |
+| Supabase CLI | Database/development tooling     |
+| NextAuth     | Authentication                   |
+| Recharts     | Charts and data visualization    |
+| Lucide React | UI icons                         |
+| Nodemailer   | Email functionality              |
+| XLSX         | Spreadsheet import/export        |
+| ESLint       | Code quality and linting         |
 
 ---
 
