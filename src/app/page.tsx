@@ -24,11 +24,12 @@ import { getBusinessCentralConfig } from "@/server/business-central/config";
 
 const projectCards = [
   {
-    title: "AZL",
-    description: "Open the AZ Health ERP dashboard, sales, purchases, stock, production, finance, and operations.",
+    title: "AG Health",
+    description: "Open the complete AG Health ERP dashboard for sales, purchases, stock, production, finance, and operations.",
     icon: Factory,
     accent: "factory",
-    action: "Open AZL",
+    action: "Open AG Health",
+    href: "/ag-health",
   },
   {
     title: "Parvati Agro",
@@ -36,6 +37,7 @@ const projectCards = [
     icon: Leaf,
     accent: "agro",
     action: "Open Parvati Agro",
+    href: "#parvati-agro",
   },
 ] as const;
 
@@ -87,7 +89,7 @@ function ProjectCard({ project }: { project: (typeof projectCards)[number] }) {
       </span>
       <h2 className="mt-6 text-2xl font-black text-[var(--ink)]">{project.title}</h2>
       <p className="mt-4 max-w-xl text-base leading-7 text-[var(--text)]">{project.description}</p>
-      <a href="#ag-health" className="mt-5 inline-flex items-center gap-3 text-base font-black text-[var(--ink)]">
+      <a href={project.href} className="mt-5 inline-flex items-center gap-3 text-base font-black text-[var(--ink)]">
         {project.action}
         <ArrowRight className="size-5" aria-hidden="true" />
       </a>
@@ -174,7 +176,7 @@ export default function Home() {
             </span>
             <span>
               <span className="block text-xl font-black leading-tight">Factory Manager</span>
-            <span className="block text-xs font-black uppercase tracking-[0.14em] text-[var(--gold)]">AZL Project Selection</span>
+              <span className="block text-xs font-black uppercase tracking-[0.14em] text-[var(--gold)]">Project Selection</span>
             </span>
           </a>
 
@@ -182,7 +184,7 @@ export default function Home() {
             <div className="rounded-2xl border border-[var(--border)] bg-[var(--cream)] px-5 py-3">
               <p className="text-xs font-black uppercase tracking-[0.12em] text-[var(--text-light)]">Project</p>
               <div className="mt-2 flex gap-2">
-                <span className="rounded-full bg-white px-4 py-2 text-sm font-black shadow-sm">AZL</span>
+                <span className="rounded-full bg-white px-4 py-2 text-sm font-black shadow-sm">AG Health</span>
                 <span className="rounded-full bg-white px-4 py-2 text-sm font-black shadow-sm">Parvati Agro</span>
               </div>
             </div>
@@ -207,7 +209,7 @@ export default function Home() {
           Choose A Project Space
         </h1>
         <p className="mt-6 max-w-5xl text-lg leading-8 text-[var(--ink)]">
-          This workspace has separate sections for AZL and Parvati Agro. We are actively building the AZ Health side, with ERP data dashboards for sales, purchases, stock, production, finance, approvals, users, and system activity.
+          This workspace has separate sections for AG Health and Parvati Agro. We are actively building the AG Health side, with ERP data dashboards for sales, purchases, stock, production, finance, approvals, users, and system activity.
         </p>
 
         <div className="mt-20 grid gap-8 md:grid-cols-2">
@@ -216,9 +218,9 @@ export default function Home() {
           ))}
         </div>
 
-        <section id="ag-health" className="mt-16">
-          <p className="text-sm font-black uppercase tracking-[0.2em] text-[var(--navy)]">AZL / AZ Health Live</p>
-          <h2 className="mt-4 text-3xl font-black tracking-tight">ERP dashboard map</h2>
+        <section id="parvati-agro" className="mt-16">
+          <p className="text-sm font-black uppercase tracking-[0.2em] text-[var(--navy)]">AG Health Live</p>
+          <h2 className="mt-4 text-3xl font-black tracking-tight">ERP dashboard preview</h2>
           <div className="mt-6 grid gap-4 md:grid-cols-3">
             <article className="status-card">
               <Database className="size-7 text-[var(--blue)]" aria-hidden="true" />
@@ -258,7 +260,7 @@ export default function Home() {
             <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
               <div>
                 <p className="text-xs font-black uppercase tracking-[0.16em] text-[var(--text-light)]">Data we will extract</p>
-                <h3 className="mt-2 text-2xl font-black text-[var(--navy)]">AZL ERP modules</h3>
+                <h3 className="mt-2 text-2xl font-black text-[var(--navy)]">AG Health ERP modules</h3>
               </div>
               <span className="rounded-full bg-[var(--badge)] px-4 py-2 text-sm font-black text-[var(--navy)]">10 groups ready</span>
             </div>

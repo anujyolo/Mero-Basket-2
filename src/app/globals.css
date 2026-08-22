@@ -147,6 +147,24 @@ a {
   background: rgba(248, 251, 255, 0.9);
 }
 
+.erp-metric-card {
+  min-height: 20rem;
+  border: 1px solid var(--border);
+  border-top-width: 5px;
+  border-radius: 1.5rem;
+  background: white;
+  padding: 2rem;
+  box-shadow: var(--shadow-soft);
+}
+
+.erp-metric-card-blue {
+  border-top-color: var(--blue);
+}
+
+.erp-metric-card-gold {
+  border-top-color: var(--gold);
+}
+
 @media (max-width: 1180px) {
   .assistant-panel {
     position: relative;
