@@ -30,7 +30,7 @@ function OutputChart({ bars }: { bars: { label: string; amount: number; height: 
         <div className="min-w-0 overflow-x-auto">
           <div className="premium-chart-axis relative flex h-[360px] min-w-[48rem] items-end gap-6 px-4 pb-4">
             {!hasPositiveValues ? <div className="premium-chart-empty">ERP returned production months, but no positive output values for this view.</div> : null}
-            {bars.map((bar) => <div key={bar.label} className="flex min-w-12 flex-1 flex-col items-center justify-end gap-2"><span className="premium-chart-bar w-full bg-[#10b981]" title={`${bar.label}: ${formatQuantity(bar.amount, "units")}`} style={{ height: `${Math.min(96, Math.max(bar.amount > 0 ? 6 : 0, bar.height))}%` }} /><span className="max-w-20 truncate text-xs font-black text-[var(--text-light)]">{bar.label}</span></div>)}
+            {bars.map((bar) => <div key={bar.label} className="flex h-full min-w-12 flex-1 flex-col items-center justify-end gap-2"><span className="premium-chart-bar w-full bg-[#10b981]" title={`${bar.label}: ${formatQuantity(bar.amount, "units")}`} style={{ height: `${Math.min(96, Math.max(bar.amount > 0 ? 6 : 0, bar.height))}%` }} /><span className="max-w-20 truncate text-xs font-black text-[var(--text-light)]">{bar.label}</span></div>)}
           </div>
         </div>
       </div>
@@ -66,7 +66,7 @@ function ComboChart({ bars, revenues }: { bars: { label: string; height: number 
         {bars.map((bar) => {
           const revenue = revenueByMonth.get(bar.label) || 0;
           const revenueHeight = revenueMax > 0 && revenue > 0 ? Math.max(6, Math.round((revenue / revenueMax) * 92)) : 0;
-          return <div key={bar.label} className="flex min-w-12 flex-1 flex-col items-center justify-end gap-2"><span className="flex h-full w-full items-end justify-center gap-1"><span className="premium-chart-bar w-3 bg-[#10b981]" style={{ height: `${bar.height > 0 ? Math.max(6, bar.height) : 0}%` }} /><span className="premium-chart-bar w-3 bg-[var(--navy)]" style={{ height: `${revenueHeight}%` }} /></span><span className="max-w-20 truncate text-xs font-black text-[var(--text-light)]">{bar.label}</span></div>;
+          return <div key={bar.label} className="flex h-full min-w-12 flex-1 flex-col items-center justify-end gap-2"><span className="flex h-full w-full items-end justify-center gap-1"><span className="premium-chart-bar w-3 bg-[#10b981]" style={{ height: `${bar.height > 0 ? Math.max(6, bar.height) : 0}%` }} /><span className="premium-chart-bar w-3 bg-[var(--navy)]" style={{ height: `${revenueHeight}%` }} /></span><span className="max-w-20 truncate text-xs font-black text-[var(--text-light)]">{bar.label}</span></div>;
         })}
       </div>
       </div>
@@ -83,7 +83,7 @@ function AreaChart({ bars }: { bars: { label: string; height: number }[] }) {
       <div className="premium-chart-surface mt-8 overflow-x-auto p-4">
       <div className="premium-chart-axis relative flex h-[360px] min-w-[42rem] items-end gap-4 px-4 pb-4">
         {!hasPositiveValues ? <div className="premium-chart-empty">No positive production trend values in this view.</div> : null}
-        {bars.map((bar) => <div key={bar.label} className="flex flex-1 flex-col items-center justify-end gap-2"><span className="premium-chart-bar w-full bg-gradient-to-t from-[#10b981] to-emerald-200" style={{ height: `${bar.height > 0 ? Math.max(6, bar.height) : 0}%` }} /><span className="max-w-20 truncate text-xs font-black text-[var(--text-light)]">{bar.label}</span></div>)}
+        {bars.map((bar) => <div key={bar.label} className="flex h-full flex-1 flex-col items-center justify-end gap-2"><span className="premium-chart-bar w-full bg-gradient-to-t from-[#10b981] to-emerald-200" style={{ height: `${bar.height > 0 ? Math.max(6, bar.height) : 0}%` }} /><span className="max-w-20 truncate text-xs font-black text-[var(--text-light)]">{bar.label}</span></div>)}
       </div>
       </div>
     </article>

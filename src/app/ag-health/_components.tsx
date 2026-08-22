@@ -250,7 +250,7 @@ export function BarChart({
               <div className="premium-chart-axis relative flex h-[360px] min-w-[48rem] items-end gap-6 px-4 pb-4">
                 {!hasPositiveValues ? <div className="premium-chart-empty">ERP returned chart labels, but no positive values for this view.</div> : null}
                 {bars.map((bar) => (
-                  <div key={bar.label} className="flex min-w-12 flex-1 flex-col items-center justify-end gap-2">
+                  <div key={bar.label} className="flex h-full min-w-12 flex-1 flex-col items-center justify-end gap-2">
                     <span
                       className={`premium-chart-bar w-full ${barClassName}`}
                       title={`${bar.label}: ${valueFormatter(bar.amount)}`}
@@ -306,7 +306,7 @@ export function ComboBarChart({
       <div className="premium-chart-axis relative flex h-[360px] min-w-[48rem] items-end gap-5 px-4 pb-4">
         {!hasPositiveValues ? <div className="premium-chart-empty">No positive ERP values for this grouped chart yet.</div> : null}
         {bars.map((bar) => (
-          <div key={bar.label} className="flex flex-1 flex-col items-center justify-end gap-2">
+          <div key={bar.label} className="flex h-full flex-1 flex-col items-center justify-end gap-2">
             <span className="flex h-full w-full items-end justify-center gap-1">
               <span className="premium-chart-bar w-3 bg-emerald-500" title={`${firstLabel} ${bar.label}: ${bar.productionAmount || `${bar.production}%`}`} style={{ height: `${bar.production}%` }} />
               <span className="premium-chart-bar w-3 bg-[var(--gold)]" title={`${middleLabel} ${bar.label}: ${bar.purchasesAmount || `${bar.purchases}%`}`} style={{ height: `${bar.purchases}%` }} />
