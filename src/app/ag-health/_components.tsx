@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Route as NextRoute } from "next";
 import type { ReactNode } from "react";
 import {
+  ArrowRight,
   BarChart3,
   Boxes,
   ClipboardCheck,
@@ -100,6 +101,75 @@ export function MetricCard({ label, value, note, icon: Icon }: { label: string; 
   );
 }
 
+export function HeroPanel({
+  eyebrow,
+  title,
+  description,
+  stats,
+  actions,
+}: {
+  eyebrow: string;
+  title: string;
+  description: string;
+  stats: { label: string; value: string; note: string; icon: LucideIcon }[];
+  actions?: { label: string; href: NextRoute }[];
+}) {
+  return (
+    <section className="grid gap-6 xl:grid-cols-[1fr_25rem]">
+      <div className="rounded-[32px] border border-[var(--border)] bg-white/74 p-7 shadow-[var(--shadow)] lg:p-9">
+        <p className="text-sm font-black uppercase tracking-[0.2em] text-[var(--gold)]">{eyebrow}</p>
+        <h1 className="mt-8 max-w-5xl text-4xl font-black tracking-tight text-[var(--ink)] lg:text-6xl">{title}</h1>
+        <p className="mt-6 max-w-5xl text-lg leading-8 text-[var(--text)]">{description}</p>
+        <div className="mt-8 grid gap-4 md:grid-cols-2">
+          {stats.map((stat) => <MetricCard key={stat.label} {...stat} />)}
+        </div>
+      </div>
+      <aside className="rounded-[28px] border border-[var(--border)] bg-white p-6 shadow-[var(--shadow-soft)]">
+        <p className="text-sm font-black uppercase tracking-[0.16em] text-[var(--text-light)]">Quick Actions</p>
+        <div className="mt-5 grid gap-3">
+          {(actions || agHealthModules.slice(0, 5)).map((action, index) => (
+            <Link key={action.label} href={action.href} className={`premium-btn ${index === 0 ? "premium-btn-primary" : index === 1 ? "premium-btn-outline" : "premium-btn-gold"}`}>
+              {action.label}
+              <ArrowRight className="size-4" aria-hidden="true" />
+            </Link>
+          ))}
+        </div>
+        <p className="mt-6 text-sm leading-6 text-[var(--text)]">The layout mirrors the reference dashboard pattern: major numbers first, drilldown buttons beside them, and supporting charts/tables below.</p>
+      </aside>
+    </section>
+  );
+}
+
+export function ExecutiveKpiCard({
+  title,
+  value,
+  detail,
+  source,
+  accent = "blue",
+  icon: Icon,
+}: {
+  title: string;
+  value: string;
+  detail: string;
+  source: string;
+  accent?: "blue" | "gold";
+  icon: LucideIcon;
+}) {
+  return (
+    <article className={`erp-metric-card ${accent === "gold" ? "erp-metric-card-gold" : "erp-metric-card-blue"}`}>
+      <div className="flex items-start justify-between gap-4">
+        <p className="max-w-72 text-sm font-black uppercase leading-6 tracking-[0.08em] text-[var(--text)]">{title}</p>
+        <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-[var(--soft)] text-[var(--navy)]">
+          <Icon className="size-6" aria-hidden="true" />
+        </span>
+      </div>
+      <p className="mt-7 text-[clamp(2rem,3vw,3.3rem)] font-black tracking-tight text-[var(--navy)]">{value}</p>
+      <p className="mt-4 text-sm leading-7 text-[var(--text)]">{detail}</p>
+      <span className="mt-5 inline-flex rounded-full bg-[var(--badge)] px-4 py-2 text-xs font-black text-[var(--text)]">{source}</span>
+    </article>
+  );
+}
+
 export function SectionHeader({ eyebrow, title, children }: { eyebrow: string; title: string; children: ReactNode }) {
   return (
     <div>
@@ -134,13 +204,52 @@ export function DataTable({ headers, rows }: { headers: string[]; rows: (string 
 }
 
 export function BarChart({ title, bars, valueFormatter }: { title: string; bars: { label: string; amount: number; height: number }[]; valueFormatter: (value: number) => string }) {
+  const max = Math.max(...bars.map((bar) => bar.amount), 0);
+  const ticks = [max, max * 0.75, max * 0.5, max * 0.25, 0];
+
   return (
     <article className="analysis-panel">
       <h3 className="text-2xl font-black text-[var(--ink)]">{title}</h3>
+      <div className="mt-8 grid grid-cols-[4.5rem_1fr] gap-3">
+        <div className="flex h-72 flex-col justify-between pb-8 text-right text-xs font-black text-[var(--text-light)]">
+          {ticks.map((tick) => <span key={tick}>{valueFormatter(tick)}</span>)}
+        </div>
+        <div className="flex h-72 items-end gap-3 border-b border-l border-[var(--border-strong)] px-4 pb-4">
+          {bars.map((bar) => (
+            <div key={bar.label} className="flex flex-1 flex-col items-center justify-end gap-2">
+              <span className="w-full rounded-t-xl bg-[var(--navy)] shadow-[0_8px_18px_rgba(33,63,103,0.18)]" title={valueFormatter(bar.amount)} style={{ height: `${bar.height}%` }} />
+              <span className="text-xs font-semibold text-[var(--text-light)] [writing-mode:vertical-rl] sm:[writing-mode:horizontal-tb]">{bar.label}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </article>
+  );
+}
+
+export function ComboBarChart({
+  title,
+  bars,
+}: {
+  title: string;
+  bars: { label: string; production: number; purchases: number; revenue: number }[];
+}) {
+  return (
+    <article className="analysis-panel">
+      <h3 className="text-2xl font-black text-[var(--ink)]">{title}</h3>
+      <div className="mt-5 flex flex-wrap gap-4 text-sm font-black">
+        <span className="text-emerald-600">Production Output</span>
+        <span className="text-[var(--gold)]">Purchases</span>
+        <span className="text-[var(--navy)]">Revenue</span>
+      </div>
       <div className="mt-8 flex h-72 items-end gap-3 border-b border-l border-[var(--border-strong)] px-4 pb-4">
         {bars.map((bar) => (
           <div key={bar.label} className="flex flex-1 flex-col items-center justify-end gap-2">
-            <span className="w-full rounded-t-xl bg-[var(--navy)]" title={valueFormatter(bar.amount)} style={{ height: `${bar.height}%` }} />
+            <span className="flex h-full w-full items-end justify-center gap-1">
+              <span className="w-2 rounded-t bg-emerald-500" style={{ height: `${bar.production}%` }} />
+              <span className="w-2 rounded-t bg-[var(--gold)]" style={{ height: `${bar.purchases}%` }} />
+              <span className="w-2 rounded-t bg-[var(--navy)]" style={{ height: `${bar.revenue}%` }} />
+            </span>
             <span className="text-xs font-semibold text-[var(--text-light)] [writing-mode:vertical-rl] sm:[writing-mode:horizontal-tb]">{bar.label}</span>
           </div>
         ))}
