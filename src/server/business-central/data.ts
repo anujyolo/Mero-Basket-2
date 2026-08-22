@@ -44,6 +44,14 @@ type ProductionRow = {
 type SalesOrderRow = {
   No?: string;
   Sell_to_Customer_Name?: string;
+  Sell_to_City?: string;
+  Sell_to_County?: string;
+  Sell_to_Country_Region_Code?: string;
+  Ship_to_City?: string;
+  Ship_to_County?: string;
+  Area?: string;
+  Salesperson_Code?: string;
+  Salesperson_Code1?: string;
   Order_Date?: string;
   Posting_Date?: string;
   Shipment_Date?: string;
@@ -54,9 +62,16 @@ type SalesOrderRow = {
 
 type SalesOrderLineRow = {
   documentNumber?: string;
+  number?: string;
   description?: string;
+  itemCategoryCode?: string;
+  postingGroup?: string;
+  unitOfMeasureCode?: string;
   quantity?: number | string;
+  quantityShipped?: number | string;
+  quantityInvoiced?: number | string;
   amount?: number | string;
+  lineAmount?: number | string;
   outstandingQuantity?: number | string;
 };
 
@@ -177,15 +192,22 @@ export type OrderRow = {
 export type SalesLineAnalysisRow = {
   orderNumber: string;
   customer: string;
+  dealer: string;
+  country: string;
+  province: string;
+  districtCity: string;
   orderDate: string;
   month: string;
+  year: string;
+  productNo: string;
   product: string;
+  productCategory: string;
   quantity: number;
   amount: number;
   outstandingQuantity: number;
   orderStatus: OrderRow["orderStatus"];
   deliveryStatus: string;
-  place: string;
+  salesperson: string;
 };
 
 export type AGHealthDashboardData = {
@@ -305,6 +327,10 @@ function normalizeStatus(status: string | undefined, outstanding = 0): OrderRow[
 function includesAny(value: string, terms: string[]) {
   const clean = value.toLowerCase();
   return terms.some((term) => clean.includes(term));
+}
+
+function mapped(value: string | undefined, fallback = "Not mapped") {
+  return value?.trim() || fallback;
 }
 
 function productionGoodsCategory(categoryCode: string, productText: string): ProductionReportRow["goodsCategory"] {
@@ -475,11 +501,11 @@ export async function getAGHealthDashboardData(): Promise<AGHealthDashboardData>
       ),
       fetchEntity<SalesOrderRow>(
         "SalesOrder",
-        "$select=No,Sell_to_Customer_Name,Order_Date,Posting_Date,Shipment_Date,Status,Amount,Amount_Including_VAT&$top=5000&$count=true",
+        "$select=No,Sell_to_Customer_Name,Sell_to_City,Sell_to_County,Sell_to_Country_Region_Code,Ship_to_City,Ship_to_County,Area,Salesperson_Code,Salesperson_Code1,Order_Date,Posting_Date,Shipment_Date,Status,Amount,Amount_Including_VAT&$top=5000&$count=true",
       ),
       fetchEntity<SalesOrderLineRow>(
         "salesDocumentLines",
-        "$select=documentNumber,description,quantity,amount,outstandingQuantity&$top=5000&$count=true",
+        "$select=documentNumber,number,description,itemCategoryCode,postingGroup,unitOfMeasureCode,quantity,quantityShipped,quantityInvoiced,amount,lineAmount,outstandingQuantity&$top=5000&$count=true",
       ),
       fetchEntity<GeneralLedgerRow>(
         "Generalledgerentries",
@@ -662,22 +688,31 @@ export async function getAGHealthDashboardData(): Promise<AGHealthDashboardData>
       .map((line) => {
         const order = orderByNumber.get(line.documentNumber || "");
         const outstanding = toNumber(line.outstandingQuantity);
-        const quantity = toNumber(line.quantity);
+        const quantity = toNumber(line.quantityShipped) || toNumber(line.quantityInvoiced) || toNumber(line.quantity);
         const orderStatus = normalizeStatus(order?.Status, outstanding);
         const orderDate = order?.Order_Date || order?.Posting_Date || "Not mapped";
+        const districtCity = mapped(order?.Ship_to_City || order?.Sell_to_City || order?.Ship_to_County || order?.Sell_to_County);
+        const dealer = mapped(order?.Sell_to_Customer_Name);
 
         return {
           orderNumber: line.documentNumber || "Not mapped",
-          customer: order?.Sell_to_Customer_Name || "Not mapped",
+          customer: dealer,
+          dealer,
+          country: mapped(order?.Sell_to_Country_Region_Code, "Nepal"),
+          province: mapped(order?.Area || order?.Salesperson_Code || order?.Salesperson_Code1),
+          districtCity,
           orderDate,
           month: toMonth(orderDate),
-          product: line.description || "Not mapped",
+          year: toYear(orderDate),
+          productNo: mapped(line.number),
+          product: line.description || line.number || "Not mapped",
+          productCategory: mapped(line.itemCategoryCode || line.postingGroup),
           quantity,
-          amount: toNumber(line.amount),
+          amount: toNumber(line.lineAmount) || toNumber(line.amount),
           outstandingQuantity: outstanding,
           orderStatus,
           deliveryStatus: outstanding > 0 ? "Pending delivery" : "Ready / completed",
-          place: order?.Sell_to_Customer_Name || "Not mapped",
+          salesperson: mapped(order?.Salesperson_Code || order?.Salesperson_Code1),
         };
       })
       .filter((row) => row.product !== "Not mapped" || row.quantity > 0 || row.amount > 0)
