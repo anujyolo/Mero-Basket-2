@@ -1,5 +1,5 @@
 import { AGHealthShell, BarChart, DataTable, ExecutiveKpiCard, HeroPanel, MetricCard, SectionHeader, dashboardIcons } from "../_components";
-import { formatQuantity, getAGHealthDashboardData } from "@/server/business-central/data";
+import { formatNpr, formatQuantity, getAGHealthDashboardData } from "@/server/business-central/data";
 
 export const dynamic = "force-dynamic";
 
@@ -18,6 +18,12 @@ export default async function ProductionPage() {
     amount,
     height: maxProduction > 0 ? Math.max(4, Math.round((amount / maxProduction) * 92)) : 0,
   }));
+  const finishedGoods = data.inventoryByCategory.filter((category) => category.category.startsWith("FG"));
+  const semiFinishedGoods = data.inventoryByCategory.filter((category) => category.category.startsWith("SMFG"));
+  const fgQuantity = finishedGoods.reduce((sum, category) => sum + category.totalStock, 0);
+  const fgValue = finishedGoods.reduce((sum, category) => sum + category.stockValue, 0);
+  const smfgQuantity = semiFinishedGoods.reduce((sum, category) => sum + category.totalStock, 0);
+  const smfgValue = semiFinishedGoods.reduce((sum, category) => sum + category.stockValue, 0);
 
   return (
     <AGHealthShell active="production" company={data.company} connected={data.connected}>
@@ -45,6 +51,12 @@ export default async function ProductionPage() {
           <ExecutiveKpiCard title="Today’s Production" value={formatQuantity(data.production.dailyProduction, "units")} detail="Finished production order quantity dated today." source="Finishedproductionordgers" icon={dashboardIcons.Factory} />
           <ExecutiveKpiCard title="Monthly Production" value={formatQuantity(data.production.monthlyProduction, "units")} detail="Finished production quantity in the current month." source="Finishedproductionordgers" icon={dashboardIcons.BarChart3} />
           <ExecutiveKpiCard title="Total Production" value={formatQuantity(data.production.totalProduction, "units")} detail="Total quantity extracted from finished production orders." source="Finishedproductionordgers" accent="gold" icon={dashboardIcons.Route} />
+        </div>
+        <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <MetricCard label="Finished Goods" value={finishedGoods.length.toLocaleString("en-US")} note="FG inventory categories visible from ERP Itemcard." icon={dashboardIcons.Boxes} />
+          <MetricCard label="FG Quantity" value={formatQuantity(fgQuantity)} note={`${formatNpr(fgValue)} current FG stock value.`} icon={dashboardIcons.Boxes} />
+          <MetricCard label="Semi-finished Goods" value={semiFinishedGoods.length.toLocaleString("en-US")} note="SMFG inventory categories visible from ERP Itemcard." icon={dashboardIcons.PackageCheck} />
+          <MetricCard label="SMFG Quantity" value={formatQuantity(smfgQuantity)} note={`${formatNpr(smfgValue)} current SMFG stock value.`} icon={dashboardIcons.PackageCheck} />
         </div>
         <div className="mt-8">
           <BarChart title="Visible Production Output" bars={productionBars} valueFormatter={(value) => formatQuantity(value, "units")} />

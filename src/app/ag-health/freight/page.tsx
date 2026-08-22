@@ -27,6 +27,21 @@ export default async function FreightPage() {
         ]}
       />
       <section className="mt-10">
+        <SectionHeader eyebrow="Date Filter" title="Freight date controls">
+          This mirrors the reference placement for date filtering. The current build shows the live ledger window; interactive filtering can be wired next without changing the page structure.
+        </SectionHeader>
+        <div className="mt-6 grid gap-4 rounded-[28px] border border-[var(--border)] bg-white p-6 shadow-[var(--shadow-soft)] md:grid-cols-4">
+          {["From date", "To date", "Current view", "Matched rows"].map((label, index) => (
+            <div key={label} className="grid gap-2 text-sm font-black text-[var(--text)]">
+              {label}
+              <span className="rounded-2xl border border-[var(--border)] bg-[var(--soft)] px-4 py-3 text-[var(--text-light)]">
+                {index === 3 ? totalRows.toLocaleString("en-US") : "Live ERP window"}
+              </span>
+            </div>
+          ))}
+        </div>
+      </section>
+      <section className="mt-10">
         <SectionHeader eyebrow="Freight Summary" title="Freight snapshot">
           Freight is filtered from GL rows containing freight, transport, vehicle, delivery, or distribution references. Total freight expense is calculated from those rows only.
         </SectionHeader>
@@ -38,6 +53,8 @@ export default async function FreightPage() {
       </section>
       <div className="mt-8 grid gap-4 md:grid-cols-3">
         <MetricCard label="Total freight expense" value={formatNpr(data.freight.totalFreightExpense)} note="Mapped freight-related GL rows." icon={dashboardIcons.Truck} />
+        <MetricCard label="Ledger vs sales" value={data.dashboard.monthlySales ? `${((data.freight.totalFreightExpense / data.dashboard.monthlySales) * 100).toFixed(2)}%` : "ERP pending"} note="Freight as a share of monthly sales." icon={dashboardIcons.BarChart3} />
+        <MetricCard label="Average monthly expense" value={formatNpr(averageFreight)} note="Average across matched live rows." icon={dashboardIcons.Route} />
       </div>
       <article className="mt-8 analysis-panel">
         <DataTable

@@ -3,6 +3,7 @@ import type { Route as NextRoute } from "next";
 import type { ReactNode } from "react";
 import {
   ArrowRight,
+  Banknote,
   BarChart3,
   Boxes,
   ClipboardCheck,
@@ -35,6 +36,7 @@ export const dashboardIcons = {
   Truck,
   WalletCards,
   ClipboardCheck,
+  Banknote,
   Route: RouteIcon,
   ReceiptText,
 };
@@ -253,6 +255,55 @@ export function ComboBarChart({
             <span className="text-xs font-semibold text-[var(--text-light)] [writing-mode:vertical-rl] sm:[writing-mode:horizontal-tb]">{bar.label}</span>
           </div>
         ))}
+      </div>
+    </article>
+  );
+}
+
+export function PieChartCard({
+  title,
+  slices,
+  valueFormatter,
+}: {
+  title: string;
+  slices: { label: string; value: number; color: string }[];
+  valueFormatter: (value: number) => string;
+}) {
+  const total = slices.reduce((sum, slice) => sum + slice.value, 0);
+  let cursor = 0;
+  const gradient = total > 0
+    ? slices
+      .map((slice) => {
+        const start = cursor;
+        const size = (slice.value / total) * 100;
+        cursor += size;
+        return `${slice.color} ${start}% ${cursor}%`;
+      })
+      .join(", ")
+    : "#e1e7ef 0% 100%";
+
+  return (
+    <article className="analysis-panel">
+      <h3 className="text-2xl font-black text-[var(--ink)]">{title}</h3>
+      <div className="mt-8 grid gap-8 md:grid-cols-[16rem_1fr] md:items-center">
+        <div className="relative mx-auto grid size-56 place-items-center rounded-full shadow-[inset_0_0_0_1px_var(--border)]" style={{ background: `conic-gradient(${gradient})` }}>
+          <div className="grid size-28 place-items-center rounded-full bg-white text-center shadow-[var(--shadow-soft)]">
+            <span className="px-3 text-sm font-black text-[var(--navy)]">{valueFormatter(total)}</span>
+          </div>
+        </div>
+        <div className="grid gap-3">
+          {slices.length === 0 ? (
+            <p className="rounded-2xl bg-[var(--soft)] px-4 py-3 text-sm font-semibold text-[var(--text)]">No live chart rows mapped yet.</p>
+          ) : slices.map((slice) => (
+            <div key={slice.label} className="flex items-center justify-between gap-4 rounded-2xl bg-[var(--soft)] px-4 py-3">
+              <span className="flex items-center gap-3 text-sm font-black text-[var(--ink)]">
+                <span className="size-3 rounded-full" style={{ background: slice.color }} />
+                {slice.label}
+              </span>
+              <span className="text-sm font-black text-[var(--navy)]">{valueFormatter(slice.value)}</span>
+            </div>
+          ))}
+        </div>
       </div>
     </article>
   );

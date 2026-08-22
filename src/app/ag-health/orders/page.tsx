@@ -1,4 +1,4 @@
-import { AGHealthShell, DataTable, ExecutiveKpiCard, HeroPanel, MetricCard, SectionHeader, dashboardIcons } from "../_components";
+import { AGHealthShell, DataTable, ExecutiveKpiCard, HeroPanel, MetricCard, PieChartCard, SectionHeader, dashboardIcons } from "../_components";
 import { formatNpr, formatQuantity, getAGHealthDashboardData } from "@/server/business-central/data";
 
 export const dynamic = "force-dynamic";
@@ -34,6 +34,9 @@ export default async function OrdersPage() {
           <ExecutiveKpiCard title="Total Orders" value={formatQuantity(data.orders.totalOrders)} detail="Total SalesOrder records available from ERP." source="SalesOrder" icon={dashboardIcons.ClipboardCheck} />
           <ExecutiveKpiCard title="Pending Orders" value={formatQuantity(data.orders.pendingOrders)} detail="Pending or processing orders in the extracted list." source="Status" icon={dashboardIcons.ReceiptText} />
           <ExecutiveKpiCard title="Processing Rows" value={processingOrders.toLocaleString("en-US")} detail="Visible order rows marked processing." source="Normalized status" accent="gold" icon={dashboardIcons.Route} />
+        </div>
+        <div className="mt-8">
+          <PieChartCard title="Order Status Mix" slices={data.orders.statusMix} valueFormatter={(value) => formatQuantity(value)} />
         </div>
       </section>
       <div className="mt-8 grid gap-4 md:grid-cols-3">

@@ -73,6 +73,23 @@ type GeneralLedgerRow = {
   Global_Dimension_2_Code?: string;
 };
 
+type TrialBalanceRow = {
+  number?: string;
+  display?: string;
+  balanceAtDateDebit?: number | string;
+  balanceAtDateCredit?: number | string;
+  dateFilter?: string;
+};
+
+type BankRow = {
+  No?: string;
+  Name?: string;
+  Balance_LCY?: number | string;
+  Bank_Acc_Posting_Group?: string;
+  Bank_Acc_Posting_Group1?: string;
+  Blocked?: boolean;
+};
+
 export type InventoryReportRow = {
   itemName: string;
   category: string;
@@ -148,12 +165,16 @@ export type AGHealthDashboardData = {
     monthlyProduction: number | null;
     totalSales: number | null;
     monthlySales: number | null;
+    receivables: number | null;
+    bankBalance: number | null;
+    bankRows: number | null;
     totalFreight: number | null;
     distributedExpense: number | null;
     totalOrders: number | null;
     pendingOrders: number | null;
   };
   inventoryByCategory: { category: string; totalStock: number; stockValue: number; rows: InventoryReportRow[] }[];
+  inventoryCategoryMix: { label: string; value: number; color: string }[];
   packingMaterials: PackingMaterialRow[];
   production: {
     rows: ProductionReportRow[];
@@ -183,6 +204,7 @@ export type AGHealthDashboardData = {
     rows: OrderRow[];
     totalOrders: number;
     pendingOrders: number;
+    statusMix: { label: string; value: number; color: string }[];
   };
 };
 
@@ -308,12 +330,16 @@ function emptyData(message: string, company: string): AGHealthDashboardData {
       monthlyProduction: null,
       totalSales: null,
       monthlySales: null,
+      receivables: null,
+      bankBalance: null,
+      bankRows: null,
       totalFreight: null,
       distributedExpense: null,
       totalOrders: null,
       pendingOrders: null,
     },
     inventoryByCategory: [],
+    inventoryCategoryMix: [],
     packingMaterials: [],
     production: {
       rows: [],
@@ -343,6 +369,7 @@ function emptyData(message: string, company: string): AGHealthDashboardData {
       rows: [],
       totalOrders: 0,
       pendingOrders: 0,
+      statusMix: [],
     },
   };
 }
@@ -355,7 +382,7 @@ export async function getAGHealthDashboardData(): Promise<AGHealthDashboardData>
   }
 
   try {
-    const [itemsResult, salesResult, productionResult, orderResult, orderLineResult, glResult] = await Promise.all([
+    const [itemsResult, salesResult, productionResult, orderResult, orderLineResult, glResult, trialBalanceResult, bankResult] = await Promise.all([
       fetchEntity<ItemRow>(
         "Itemcard",
         "$select=No,Description,Base_Unit_of_Measure,Item_Category_Code,Inventory,Qty_on_Purch_Order,Unit_Cost,Last_Direct_Cost,Inventory_Posting_Group,Unit_Price,Vendor_No,Last_Date_Modified&$count=true",
@@ -379,6 +406,14 @@ export async function getAGHealthDashboardData(): Promise<AGHealthDashboardData>
       fetchEntity<GeneralLedgerRow>(
         "Generalledgerentries",
         "$select=Posting_Date,Document_No,G_L_Account_Name,Description,Narration,Source_Name,External_Document_No,Amount,Debit_Amount,Global_Dimension_1_Code,Global_Dimension_2_Code&$top=500",
+      ),
+      fetchEntity<TrialBalanceRow>(
+        "ExcelTemplateTrialBalance",
+        "$filter=number eq '110405'&$select=number,display,balanceAtDateDebit,balanceAtDateCredit,dateFilter&$count=true",
+      ),
+      fetchEntity<BankRow>(
+        "Bankacccard1",
+        "$select=No,Name,Balance_LCY,Bank_Acc_Posting_Group,Bank_Acc_Posting_Group1,Blocked&$count=true",
       ),
     ]);
 
@@ -410,6 +445,16 @@ export async function getAGHealthDashboardData(): Promise<AGHealthDashboardData>
         rows: rows
           .sort((a, b) => b.stockValue - a.stockValue)
           .slice(0, 8),
+      }));
+    const categoryColors = ["#213f67", "#3d78dd", "#e2be2d", "#16a34a", "#8b5cf6", "#f97316", "#64748b"];
+    const inventoryCategoryMix = inventoryByCategory
+      .slice()
+      .sort((a, b) => b.stockValue - a.stockValue)
+      .slice(0, 7)
+      .map((category, index) => ({
+        label: category.category,
+        value: category.stockValue,
+        color: categoryColors[index % categoryColors.length],
       }));
 
     const packingMaterials = inventoryRows
@@ -523,6 +568,27 @@ export async function getAGHealthDashboardData(): Promise<AGHealthDashboardData>
     const totalInventoryValue = inventoryRows.reduce((sum, row) => sum + row.stockValue, 0);
     const packingMaterialStock = packingMaterials.reduce((sum, row) => sum + row.currentStock, 0);
     const pendingOrders = orders.filter((row) => row.orderStatus === "Pending" || row.orderStatus === "Processing").length;
+    const receivablesRow = trialBalanceResult.rows[0];
+    const receivables = receivablesRow
+      ? toNumber(receivablesRow.balanceAtDateDebit) - toNumber(receivablesRow.balanceAtDateCredit)
+      : null;
+    const activeBanks = bankResult.rows.filter(
+      (row) => !row.Blocked && (row.Bank_Acc_Posting_Group === "BANK" || row.Bank_Acc_Posting_Group1 === "BANK"),
+    );
+    const bankBalance = activeBanks.reduce((sum, row) => sum + toNumber(row.Balance_LCY), 0);
+    const orderStatusColors: Record<OrderRow["orderStatus"], string> = {
+      Pending: "#e2be2d",
+      Processing: "#3d78dd",
+      Completed: "#16a34a",
+      Cancelled: "#ef4444",
+    };
+    const statusMix = (["Pending", "Processing", "Completed", "Cancelled"] as const)
+      .map((statusLabel) => ({
+        label: statusLabel,
+        value: orders.filter((row) => row.orderStatus === statusLabel).length,
+        color: orderStatusColors[statusLabel],
+      }))
+      .filter((row) => row.value > 0);
 
     return {
       connected: true,
@@ -536,12 +602,16 @@ export async function getAGHealthDashboardData(): Promise<AGHealthDashboardData>
         monthlyProduction,
         totalSales,
         monthlySales: currentMonthSales,
+        receivables,
+        bankBalance,
+        bankRows: activeBanks.length,
         totalFreight: totalFreightExpense,
         distributedExpense: totalDistributedExpense,
         totalOrders: orderResult.count ?? orders.length,
         pendingOrders,
       },
       inventoryByCategory,
+      inventoryCategoryMix,
       packingMaterials,
       production: {
         rows: productionRows.slice(0, 15),
@@ -571,6 +641,7 @@ export async function getAGHealthDashboardData(): Promise<AGHealthDashboardData>
         rows: orders,
         totalOrders: orderResult.count ?? orders.length,
         pendingOrders,
+        statusMix,
       },
     };
   } catch (error) {

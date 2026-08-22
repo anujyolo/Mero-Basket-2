@@ -1,4 +1,4 @@
-import { AGHealthShell, BarChart, DataTable, ExecutiveKpiCard, HeroPanel, SectionHeader, dashboardIcons } from "../_components";
+import { AGHealthShell, BarChart, DataTable, ExecutiveKpiCard, HeroPanel, PieChartCard, SectionHeader, dashboardIcons } from "../_components";
 import { formatNpr, formatQuantity, getAGHealthDashboardData } from "@/server/business-central/data";
 
 export const dynamic = "force-dynamic";
@@ -41,8 +41,9 @@ export default async function InventoryReportPage() {
           <ExecutiveKpiCard title="Packing Material Stock" value={formatQuantity(data.dashboard.packingMaterialStock)} detail="Only PM category stock." source="Itemcard: PM" icon={dashboardIcons.PackageCheck} />
           <ExecutiveKpiCard title="Category Count" value={data.inventoryByCategory.length.toLocaleString("en-US")} detail="All visible ERP inventory groups remain separated." source="Inventory_Posting_Group" accent="gold" icon={dashboardIcons.Route} />
         </div>
-        <div className="mt-8">
+        <div className="mt-8 grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
           <BarChart title="Top Inventory Categories by Stock Value" bars={topCategoryBars} valueFormatter={formatNpr} />
+          <PieChartCard title="Inventory Category Mix" slices={data.inventoryCategoryMix} valueFormatter={formatNpr} />
         </div>
       </section>
       <div className="mt-8 grid gap-6">
