@@ -1,94 +1,107 @@
-import { AGHealthShell, BarChart, ExecutiveKpiCard, HeroPanel, MetricCard, PieChartCard, SectionHeader, dashboardIcons } from "../_components";
+import { AGHealthShell, PieChartCard, dashboardIcons } from "../_components";
 import { formatNpr, formatQuantity, getAGHealthDashboardData } from "@/server/business-central/data";
 import { ProductionReport } from "./production-report";
 
 export const dynamic = "force-dynamic";
 
-const compactUnits = (value: number) => `${new Intl.NumberFormat("en-US", {
-  notation: "compact",
-  maximumFractionDigits: 1,
-}).format(value)} units`;
+const compactUnits = (value: number) => `${new Intl.NumberFormat("en-US", { notation: "compact", maximumFractionDigits: 1 }).format(value)} units`;
+
+function Kpi({ title, value, note, source, tone = "info" }: { title: string; value: string; note: string; source: string; tone?: "primary" | "info" | "gold" | "green" | "red" }) {
+  const Icon = dashboardIcons.Factory;
+  return (
+    <article className={`kpi-card ${tone}`}>
+      <div className="kpi-header"><h3 className="kpi-title">{title}</h3><span className="kpi-icon"><Icon className="size-5" /></span></div>
+      <div className="kpi-value">{value}</div>
+      <p className="kpi-subtitle">{note}</p>
+      <span className="kpi-trend">{source}</span>
+    </article>
+  );
+}
+
+function OutputChart({ bars }: { bars: { label: string; amount: number; height: number }[] }) {
+  const max = Math.max(...bars.map((bar) => bar.amount), 0);
+  const ticks = [max, max * 0.75, max * 0.5, max * 0.25, 0];
+  return (
+    <article className="chart-container">
+      <div className="chart-header"><div><h3 className="chart-title">Business Central Production Output</h3><p className="chart-subtitle">Monthly production output from existing Business Central production rows.</p></div><span className="kpi-trend">{bars.length} months</span></div>
+      <div className="mt-8 grid grid-cols-[5.8rem_minmax(0,1fr)] gap-4 rounded-[28px] bg-[var(--soft)] p-4">
+        <div className="flex h-[360px] flex-col justify-between pb-10 text-right text-[11px] font-black text-[var(--text-light)]">{ticks.map((tick, index) => <span key={index}>{compactUnits(tick)}</span>)}</div>
+        <div className="min-w-0 overflow-x-auto">
+          <div className="flex h-[360px] min-w-[42rem] items-end gap-3 border-b border-l border-[var(--border-strong)] px-4 pb-4">
+            {bars.map((bar) => <div key={bar.label} className="flex min-w-12 flex-1 flex-col items-center justify-end gap-2"><span className="w-full rounded-t-xl bg-[#10b981] shadow-[0_10px_22px_rgba(16,185,129,0.22)]" title={`${bar.label}: ${formatQuantity(bar.amount, "units")}`} style={{ height: `${Math.min(96, Math.max(bar.amount > 0 ? 6 : 0, bar.height))}%` }} /><span className="max-w-20 truncate text-xs font-black text-[var(--text-light)]">{bar.label}</span></div>)}
+          </div>
+        </div>
+      </div>
+    </article>
+  );
+}
+
+function ComboChart({ bars, revenues }: { bars: { label: string; height: number }[]; revenues: { amount: number }[] }) {
+  const revenueMax = Math.max(...revenues.map((row) => row.amount), 0);
+  return (
+    <article className="chart-container">
+      <div className="chart-header"><div><h3 className="chart-title">Production vs Revenue</h3><p className="chart-subtitle">Production output and sales revenue share the same premium dashboard placement.</p></div></div>
+      <div className="mt-5 flex gap-4 text-sm font-black"><span className="text-emerald-600">Production</span><span className="text-[var(--navy)]">Revenue</span></div>
+      <div className="mt-8 flex h-[360px] items-end gap-3 overflow-x-auto border-b border-l border-[var(--border-strong)] px-4 pb-4">
+        {bars.map((bar, index) => {
+          const revenueHeight = revenueMax > 0 ? Math.max(6, Math.round(((revenues[index]?.amount || 0) / revenueMax) * 92)) : 0;
+          return <div key={bar.label} className="flex min-w-12 flex-1 flex-col items-center justify-end gap-2"><span className="flex h-full w-full items-end justify-center gap-1"><span className="w-3 rounded-t bg-[#10b981]" style={{ height: `${Math.max(6, bar.height)}%` }} /><span className="w-3 rounded-t bg-[var(--navy)]" style={{ height: `${revenueHeight}%` }} /></span><span className="max-w-20 truncate text-xs font-black text-[var(--text-light)]">{bar.label}</span></div>;
+        })}
+      </div>
+    </article>
+  );
+}
+
+function AreaChart({ bars }: { bars: { label: string; height: number }[] }) {
+  return (
+    <article className="chart-container">
+      <div className="chart-header"><div><h3 className="chart-title">Production Trend</h3><p className="chart-subtitle">Green area-style trend for active production months.</p></div></div>
+      <div className="mt-8 flex h-[360px] items-end gap-2 rounded-[28px] bg-gradient-to-t from-emerald-50 to-white px-4 pb-4">
+        {bars.map((bar) => <div key={bar.label} className="flex flex-1 flex-col items-center justify-end gap-2"><span className="w-full rounded-t-xl bg-gradient-to-t from-[#10b981] to-emerald-200" style={{ height: `${Math.max(6, bar.height)}%` }} /><span className="max-w-20 truncate text-xs font-black text-[var(--text-light)]">{bar.label}</span></div>)}
+      </div>
+    </article>
+  );
+}
 
 export default async function ProductionPage() {
   const data = await getAGHealthDashboardData();
-  const productionBars = data.production.monthlyTrend.slice(-12);
-  const finishedGoods = data.production.goodsRows.filter((row) => row.goodsType === "Finished Good");
-  const semiFinishedGoods = data.production.goodsRows.filter((row) => row.goodsType === "Semi-finished Good");
-  const fgQuantity = finishedGoods.reduce((sum, row) => sum + row.inventory, 0);
-  const fgValue = finishedGoods.reduce((sum, row) => sum + row.stockValue, 0);
-  const smfgQuantity = semiFinishedGoods.reduce((sum, row) => sum + row.inventory, 0);
-  const smfgValue = semiFinishedGoods.reduce((sum, row) => sum + row.stockValue, 0);
-  const positiveFgCount = finishedGoods.filter((row) => row.inventory > 0).length;
-  const positiveSmfgCount = semiFinishedGoods.filter((row) => row.inventory > 0).length;
-  const goodsValueMix = [
-    { label: "Finished Goods", value: fgValue, color: "#213f67" },
-    { label: "Semi-finished Goods", value: smfgValue, color: "#3d78dd" },
-  ].filter((row) => row.value > 0);
-  const goodsStatusMix = [
-    { label: "In stock", value: data.production.goodsRows.filter((row) => row.status === "In stock").length, color: "#16a34a" },
-    { label: "Finished / zero stock", value: data.production.goodsRows.filter((row) => row.status === "Finished / zero stock").length, color: "#e2be2d" },
-  ].filter((row) => row.value > 0);
-  const loadedRows = data.production.rows.length;
-  const availableRows = data.production.rowCount || loadedRows;
+  const bars = data.production.monthlyTrend.slice(-12);
+  const revenues = data.salesAnalysis.monthlyTrend.slice(-12);
+  const fg = data.production.goodsRows.filter((row) => row.goodsType === "Finished Good");
+  const smfg = data.production.goodsRows.filter((row) => row.goodsType === "Semi-finished Good");
+  const fgQty = fg.reduce((sum, row) => sum + row.inventory, 0);
+  const smfgQty = smfg.reduce((sum, row) => sum + row.inventory, 0);
+  const fgValue = fg.reduce((sum, row) => sum + row.stockValue, 0);
+  const smfgValue = smfg.reduce((sum, row) => sum + row.stockValue, 0);
+  const latest = data.production.rows[0];
+  const activeMonths = data.production.monthlyTrend.filter((row) => row.amount > 0).length;
+  const mix = [{ label: "Finished Goods", value: fgValue, color: "#213f67" }, { label: "Semi-Finished Goods", value: smfgValue, color: "#10b981" }].filter((row) => row.value > 0);
 
   return (
     <AGHealthShell active="production" company={data.company} connected={data.connected}>
-      <HeroPanel
-        eyebrow="Production"
-        title="Live finished and semi-finished product stock"
-        description="This follows the reference production page: production output context at the top, then current finished-goods and semi-finished-goods product stock from ERP Itemcard."
-        stats={[
-          { label: "Production stock lines", value: data.production.goodsRows.length.toLocaleString("en-US"), note: `${finishedGoods.length} FG and ${semiFinishedGoods.length} SMFG items from ERP Itemcard.`, icon: dashboardIcons.Route },
-          { label: "Finished goods quantity", value: formatQuantity(fgQuantity), note: `${positiveFgCount.toLocaleString("en-US")} positive-stock finished goods.`, icon: dashboardIcons.Factory },
-          { label: "Semi-finished quantity", value: formatQuantity(smfgQuantity), note: `${positiveSmfgCount.toLocaleString("en-US")} positive-stock semi-finished items.`, icon: dashboardIcons.BarChart3 },
-          { label: "Production output rows", value: loadedRows.toLocaleString("en-US"), note: `${availableRows.toLocaleString("en-US")} output rows reported by Business Central.`, icon: dashboardIcons.Route },
-        ]}
-        actions={[
-          { label: "Sales Analysis", href: "/ag-health/sales-analysis" },
-          { label: "Inventory Report", href: "/ag-health/inventory-report" },
-          { label: "Orders", href: "/ag-health/orders" },
-        ]}
-      />
-      <section className="mt-10">
-        <SectionHeader eyebrow="Production Output" title="Production snapshot">
-          Production is organized like the reference: live output context plus the current FG/SMFG product stock table. Search and filters below let you manually find any product.
-        </SectionHeader>
-        <div className="mt-8 grid gap-6 xl:grid-cols-3">
-          <ExecutiveKpiCard title="Latest Production Output" value={data.production.rows[0] ? formatQuantity(data.production.rows[0].quantityProduced, "units") : "ERP pending"} detail={data.production.rows[0]?.productionDate || "No production output date mapped."} source="Finishedproductionordgers" icon={dashboardIcons.Factory} />
-          <ExecutiveKpiCard title="12-Month / Loaded Output" value={formatQuantity(data.production.totalProduction, "units")} detail={`${loadedRows.toLocaleString("en-US")} output rows loaded; ${availableRows.toLocaleString("en-US")} rows reported by ERP.`} source="Finishedproductionordgers" icon={dashboardIcons.BarChart3} />
-          <ExecutiveKpiCard title="Production Stock Lines" value={data.production.goodsRows.length.toLocaleString("en-US")} detail={`${finishedGoods.length.toLocaleString("en-US")} FG items and ${semiFinishedGoods.length.toLocaleString("en-US")} SMFG items from live Itemcard.`} source="Itemcard: FG / SMFG" accent="gold" icon={dashboardIcons.Route} />
-        </div>
-        <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <MetricCard label="Finished Goods" value={finishedGoods.length.toLocaleString("en-US")} note={`${positiveFgCount.toLocaleString("en-US")} positive-stock finished-good items.`} icon={dashboardIcons.Boxes} />
-          <MetricCard label="FG Quantity" value={formatQuantity(fgQuantity)} note={`${formatNpr(fgValue)} current FG stock value.`} icon={dashboardIcons.Boxes} />
-          <MetricCard label="Semi-finished Goods" value={semiFinishedGoods.length.toLocaleString("en-US")} note={`${positiveSmfgCount.toLocaleString("en-US")} positive-stock semi-finished items.`} icon={dashboardIcons.PackageCheck} />
-          <MetricCard label="SMFG Quantity" value={formatQuantity(smfgQuantity)} note={`${formatNpr(smfgValue)} current SMFG stock value.`} icon={dashboardIcons.PackageCheck} />
-        </div>
-        <div className="mt-8 grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-          <BarChart
-            title="Monthly Production Output"
-            bars={productionBars}
-            valueFormatter={(value) => formatQuantity(value, "units")}
-            axisFormatter={compactUnits}
-            note="Monthly output from all extracted production rows, placed like the reference dashboard but using AG Health ERP data."
-          />
-          <PieChartCard title="Production Stock Value by Goods Type" slices={goodsValueMix} valueFormatter={formatNpr} />
+      <section className="rounded-[32px] border border-[var(--border)] bg-white/74 p-7 shadow-[var(--shadow)] lg:p-9">
+        <p className="text-sm font-black uppercase tracking-[0.2em] text-[var(--gold)]">Production</p>
+        <h1 className="mt-6 max-w-5xl text-4xl font-black tracking-tight text-[var(--ink)] lg:text-6xl">Production Management</h1>
+        <p className="mt-5 max-w-5xl text-lg leading-8 text-[var(--text)]">Live Business Central production output and FG/SMFG stock in the same premium dashboard layout as AG Health.</p>
+        <div className="mt-6 inline-flex rounded-full bg-[var(--soft)] px-4 py-2 text-xs font-black uppercase tracking-[0.1em] text-[var(--text)]">ERP source: Finishedproductionordgers + Itemcard FG/SMFG</div>
+      </section>
+      <section className="mt-8 kpi-grid">
+        <Kpi title="Latest Production" value={latest ? formatQuantity(latest.quantityProduced, "units") : "ERP pending"} note={latest?.productionDate || "No date mapped."} source="Finishedproductionordgers" tone="primary" />
+        <Kpi title="12-Month Output" value={formatQuantity(data.production.totalProduction, "units")} note={`${data.production.rows.length.toLocaleString("en-US")} production rows loaded.`} source="Business Central" tone="green" />
+        <Kpi title="Production Stock Lines" value={data.production.goodsRows.length.toLocaleString("en-US")} note="Live finished and semi-finished product stock lines." source="Itemcard" tone="gold" />
+        <Kpi title="Finished Goods" value={fg.length.toLocaleString("en-US")} note={`${formatQuantity(fgQty)} stock · ${formatNpr(fgValue)} value.`} source="FG" tone="info" />
+        <Kpi title="Semi-Finished Goods" value={smfg.length.toLocaleString("en-US")} note={`${formatQuantity(smfgQty)} stock · ${formatNpr(smfgValue)} value.`} source="SMFG" tone="info" />
+        <Kpi title="Active Production Months" value={activeMonths.toLocaleString("en-US")} note="Months with positive production output." source="Trend" tone="green" />
+      </section>
+      <section className="mt-8 premium-grid">
+        <OutputChart bars={bars} />
+        <div className="premium-grid-2"><ComboChart bars={bars} revenues={revenues} /><AreaChart bars={bars} /></div>
+        <div className="premium-grid-2">
+          <PieChartCard title="Finished Goods vs Semi-Finished Goods" slices={mix} valueFormatter={formatNpr} />
+          <article className="chart-container"><div className="chart-header"><div><h3 className="chart-title">Live Production Stock Lines</h3><p className="chart-subtitle">Top visible FG/SMFG stock lines by current value.</p></div></div><div className="mt-6 grid gap-3">{data.production.goodsRows.slice(0, 8).map((row) => <div key={row.itemNo} className="flex items-center justify-between gap-4 rounded-2xl bg-[var(--soft)] px-4 py-3"><span className="text-sm font-black text-[var(--ink)]">{row.description}</span><span className="whitespace-nowrap text-sm font-black text-[var(--navy)]">{formatNpr(row.stockValue)}</span></div>)}</div></article>
         </div>
       </section>
-      <section className="mt-8 grid gap-6 xl:grid-cols-2">
-        <PieChartCard title="Production Stock Status" slices={goodsStatusMix} valueFormatter={(value) => formatQuantity(value)} />
-        <article className="analysis-panel">
-          <h3 className="text-2xl font-black text-[var(--ink)]">Inventory context for finished goods</h3>
-          <p className="mt-3 text-sm font-semibold leading-6 text-[var(--text)]">This is only stock context. The searchable production register below remains production-only.</p>
-          <div className="mt-6 grid gap-4 sm:grid-cols-2">
-            <MetricCard label="FG inventory groups" value={finishedGoods.length.toLocaleString("en-US")} note={`${formatQuantity(fgQuantity)} stock · ${formatNpr(fgValue)}`} icon={dashboardIcons.Boxes} />
-            <MetricCard label="SMFG inventory groups" value={semiFinishedGoods.length.toLocaleString("en-US")} note={`${formatQuantity(smfgQuantity)} stock · ${formatNpr(smfgValue)}`} icon={dashboardIcons.PackageCheck} />
-          </div>
-        </article>
-      </section>
-      <div className="mt-8">
-        <ProductionReport rows={data.production.goodsRows} />
-      </div>
+      <div className="mt-8"><ProductionReport rows={data.production.goodsRows} /></div>
     </AGHealthShell>
   );
 }
