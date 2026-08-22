@@ -44,6 +44,12 @@ export default async function OrdersPage() {
         <MetricCard label="Pending orders" value={formatQuantity(data.orders.pendingOrders)} note="Pending or processing rows in the extracted list." icon={dashboardIcons.ReceiptText} />
       </div>
       <article className="mt-8 chart-container">
+        <div className="chart-header">
+          <div>
+            <h3 className="chart-title">Order Detail</h3>
+            <p className="chart-subtitle">SalesOrder headers are joined with sales document lines so each row can show customer, product, quantity, amount, and status.</p>
+          </div>
+        </div>
         <DataTable
           headers={["Order number", "Customer", "Order date", "Product", "Quantity", "Amount", "Order status", "Delivery status"]}
           rows={data.orders.rows.map((row) => [
@@ -56,6 +62,25 @@ export default async function OrdersPage() {
             row.orderStatus,
             row.deliveryStatus,
           ])}
+        />
+      </article>
+      <article className="mt-8 chart-container">
+        <div className="chart-header">
+          <div>
+            <h3 className="chart-title">Exact Orders Field Trace</h3>
+            <p className="chart-subtitle">ERP fields used to calculate order cards, status chart, and order table.</p>
+          </div>
+        </div>
+        <DataTable
+          headers={["Data shown", "ERP source", "Fields used"]}
+          rows={[
+            ["Order number/customer", "SalesOrder", "No, Sell_to_Customer_Name"],
+            ["Order date", "SalesOrder", "Order_Date, Posting_Date"],
+            ["Product", "salesDocumentLines", "number, description, itemCategoryCode"],
+            ["Quantity", "salesDocumentLines", "quantity, quantityShipped, quantityInvoiced"],
+            ["Amount", "SalesOrder / salesDocumentLines", "Amount, lineAmount"],
+            ["Order and delivery status", "SalesOrder + salesDocumentLines", "Status, outstandingQuantity, Shipment_Date"],
+          ]}
         />
       </article>
     </AGHealthShell>

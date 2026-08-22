@@ -57,6 +57,12 @@ export default async function FreightPage() {
         <MetricCard label="Average monthly expense" value={formatNpr(averageFreight)} note="Average across matched live rows." icon={dashboardIcons.Route} />
       </div>
       <article className="mt-8 chart-container">
+        <div className="chart-header">
+          <div>
+            <h3 className="chart-title">Freight Ledger Detail</h3>
+            <p className="chart-subtitle">Only GL rows with freight, transport, vehicle, delivery, or distribution signals are shown here.</p>
+          </div>
+        </div>
         <DataTable
           headers={["Date", "Supplier/customer", "Invoice/reference", "Freight amount", "Transport company", "Related purchase/order", "Remarks"]}
           rows={data.freight.rows.map((row) => [
@@ -68,6 +74,25 @@ export default async function FreightPage() {
             row.relatedPurchaseOrder,
             row.remarks,
           ])}
+        />
+      </article>
+      <article className="mt-8 chart-container">
+        <div className="chart-header">
+          <div>
+            <h3 className="chart-title">Exact Freight Field Trace</h3>
+            <p className="chart-subtitle">ERP fields used to identify freight rows and calculate total freight expense.</p>
+          </div>
+        </div>
+        <DataTable
+          headers={["Data shown", "ERP source", "Fields used"]}
+          rows={[
+            ["Freight filter", "Generalledgerentries", "Description, Narration, G_L_Account_Name"],
+            ["Freight date", "Generalledgerentries", "Posting_Date"],
+            ["Invoice/reference", "Generalledgerentries", "Document_No, External_Document_No"],
+            ["Supplier/customer", "Generalledgerentries", "Source_Name"],
+            ["Freight amount", "Generalledgerentries", "Amount, Debit_Amount"],
+            ["Transport / related order", "Generalledgerentries", "Description, Document_No"],
+          ]}
         />
       </article>
     </AGHealthShell>
