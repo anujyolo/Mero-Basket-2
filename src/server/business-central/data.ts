@@ -92,8 +92,12 @@ type BankRow = {
 };
 
 export type InventoryReportRow = {
+  itemNo: string;
   itemName: string;
   category: string;
+  itemCategory: string;
+  postingGroup: string;
+  status: "In stock" | "Finished / zero stock";
   currentStock: number;
   unit: string;
   purchasedQuantity: number;
@@ -101,6 +105,18 @@ export type InventoryReportRow = {
   supplier: string;
   purchaseDate: string;
   remainingQuantity: number;
+  stockValue: number;
+};
+
+export type ProductionGoodsRow = {
+  itemNo: string;
+  description: string;
+  goodsType: "Finished Good" | "Semi-finished Good";
+  category: string;
+  postingGroup: string;
+  status: "In stock" | "Finished / zero stock";
+  inventory: number;
+  unitCost: number;
   stockValue: number;
 };
 
@@ -183,6 +199,7 @@ export type AGHealthDashboardData = {
   packingMaterials: PackingMaterialRow[];
   production: {
     rows: ProductionReportRow[];
+    goodsRows: ProductionGoodsRow[];
     rowCount: number;
     dailyProduction: number;
     monthlyProduction: number;
@@ -380,6 +397,7 @@ function emptyData(message: string, company: string): AGHealthDashboardData {
     packingMaterials: [],
     production: {
       rows: [],
+      goodsRows: [],
       rowCount: 0,
       dailyProduction: 0,
       monthlyProduction: 0,
@@ -463,10 +481,16 @@ export async function getAGHealthDashboardData(): Promise<AGHealthDashboardData>
       const currentStock = toNumber(item.Inventory);
       const purchaseRate = toNumber(item.Last_Direct_Cost) || toNumber(item.Unit_Cost) || toNumber(item.Unit_Price);
       const category = item.Inventory_Posting_Group || item.Item_Category_Code || "Uncategorized";
+      const itemCategory = item.Item_Category_Code || "Uncategorized";
+      const itemNo = item.No || "Not mapped";
 
       return {
+        itemNo,
         itemName: item.Description || item.No || "Unnamed item",
         category,
+        itemCategory,
+        postingGroup: item.Inventory_Posting_Group || "Not mapped",
+        status: currentStock > 0 ? "In stock" as const : "Finished / zero stock" as const,
         currentStock,
         unit: item.Base_Unit_of_Measure || "—",
         purchasedQuantity: toNumber(item.Qty_on_Purch_Order),
@@ -498,8 +522,7 @@ export async function getAGHealthDashboardData(): Promise<AGHealthDashboardData>
         totalStock: rows.reduce((sum, row) => sum + row.currentStock, 0),
         stockValue: rows.reduce((sum, row) => sum + row.stockValue, 0),
         rows: rows
-          .sort((a, b) => b.stockValue - a.stockValue)
-          .slice(0, 8),
+          .sort((a, b) => b.stockValue - a.stockValue),
       }));
     const categoryColors = ["#213f67", "#3d78dd", "#e2be2d", "#16a34a", "#8b5cf6", "#f97316", "#64748b"];
     const inventoryCategoryMix = inventoryByCategory
@@ -515,7 +538,6 @@ export async function getAGHealthDashboardData(): Promise<AGHealthDashboardData>
     const packingMaterials = inventoryRows
       .filter((row) => row.category === "PM")
       .sort((a, b) => b.currentStock - a.currentStock)
-      .slice(0, 15)
       .map((row) => ({
         packingMaterialName: row.itemName,
         currentStock: row.currentStock,
@@ -526,6 +548,20 @@ export async function getAGHealthDashboardData(): Promise<AGHealthDashboardData>
         purchaseDate: row.purchaseDate,
         remainingQuantity: row.remainingQuantity,
       }));
+    const productionGoodsRows = inventoryRows
+      .filter((row) => row.postingGroup.startsWith("FG") || row.postingGroup.startsWith("SMFG") || row.itemNo.startsWith("FG"))
+      .map((row) => ({
+        itemNo: row.itemNo,
+        description: row.itemName,
+        goodsType: row.postingGroup.startsWith("SMFG") ? "Semi-finished Good" as const : "Finished Good" as const,
+        category: row.itemCategory,
+        postingGroup: row.postingGroup,
+        status: row.status,
+        inventory: row.currentStock,
+        unitCost: row.purchaseRate,
+        stockValue: row.stockValue,
+      }))
+      .sort((a, b) => b.stockValue - a.stockValue);
 
     const productionRows = productionResult.rows.map((row) => {
       const productionDate = row.Finished_Date || row.Ending_Date || row.Starting_Date || "Not mapped";
@@ -703,6 +739,7 @@ export async function getAGHealthDashboardData(): Promise<AGHealthDashboardData>
       packingMaterials,
       production: {
         rows: productionRows,
+        goodsRows: productionGoodsRows,
         rowCount: productionResult.count ?? productionRows.length,
         dailyProduction,
         monthlyProduction,

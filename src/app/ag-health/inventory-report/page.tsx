@@ -1,5 +1,6 @@
 import { AGHealthShell, BarChart, DataTable, ExecutiveKpiCard, HeroPanel, PieChartCard, SectionHeader, dashboardIcons } from "../_components";
 import { formatNpr, formatQuantity, getAGHealthDashboardData } from "@/server/business-central/data";
+import { InventoryRegister } from "./inventory-register";
 
 export const dynamic = "force-dynamic";
 
@@ -10,6 +11,7 @@ const compactNpr = (value: number) => `NPR ${new Intl.NumberFormat("en-US", {
 
 export default async function InventoryReportPage() {
   const data = await getAGHealthDashboardData();
+  const inventoryRows = data.inventoryByCategory.flatMap((category) => category.rows);
   const topCategoryBars = data.inventoryByCategory
     .slice()
     .sort((a, b) => b.stockValue - a.stockValue)
@@ -51,6 +53,9 @@ export default async function InventoryReportPage() {
           <PieChartCard title="Inventory Category Mix" slices={data.inventoryCategoryMix} valueFormatter={formatNpr} />
         </div>
       </section>
+      <div className="mt-8">
+        <InventoryRegister rows={inventoryRows} />
+      </div>
       <div className="mt-8 grid gap-6">
         {data.inventoryByCategory.map((category) => (
           <article key={category.category} className="analysis-panel">
@@ -61,10 +66,13 @@ export default async function InventoryReportPage() {
               </div>
             </div>
             <DataTable
-              headers={["Item name", "Category", "Current stock", "Unit", "Purchased qty", "Purchase rate", "Supplier", "Purchase date", "Remaining qty", "Stock value"]}
+              headers={["Item no", "Item name", "Posting group", "Item category", "Status", "Current stock", "Unit", "Purchased qty", "Purchase rate", "Supplier", "Purchase date", "Remaining qty", "Stock value"]}
               rows={category.rows.map((row) => [
+                row.itemNo,
                 row.itemName,
-                row.category,
+                row.postingGroup,
+                row.itemCategory,
+                row.status,
                 row.currentStock.toLocaleString("en-US", { maximumFractionDigits: 4 }),
                 row.unit,
                 row.purchasedQuantity.toLocaleString("en-US", { maximumFractionDigits: 4 }),

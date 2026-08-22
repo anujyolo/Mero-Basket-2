@@ -12,15 +12,22 @@ const compactUnits = (value: number) => `${new Intl.NumberFormat("en-US", {
 export default async function ProductionPage() {
   const data = await getAGHealthDashboardData();
   const productionBars = data.production.monthlyTrend.slice(-12);
-  const finishedGoods = data.inventoryByCategory.filter((category) => category.category.startsWith("FG"));
-  const semiFinishedGoods = data.inventoryByCategory.filter((category) => category.category.startsWith("SMFG"));
-  const fgQuantity = finishedGoods.reduce((sum, category) => sum + category.totalStock, 0);
-  const fgValue = finishedGoods.reduce((sum, category) => sum + category.stockValue, 0);
-  const smfgQuantity = semiFinishedGoods.reduce((sum, category) => sum + category.totalStock, 0);
-  const smfgValue = semiFinishedGoods.reduce((sum, category) => sum + category.stockValue, 0);
-  const finishedProduction = data.production.categoryMix.find((row) => row.label === "Finished Goods")?.value || 0;
-  const semiFinishedProduction = data.production.categoryMix.find((row) => row.label === "Semi-finished Goods")?.value || 0;
-  const otherProduction = data.production.categoryMix.find((row) => row.label === "Other Production")?.value || 0;
+  const finishedGoods = data.production.goodsRows.filter((row) => row.goodsType === "Finished Good");
+  const semiFinishedGoods = data.production.goodsRows.filter((row) => row.goodsType === "Semi-finished Good");
+  const fgQuantity = finishedGoods.reduce((sum, row) => sum + row.inventory, 0);
+  const fgValue = finishedGoods.reduce((sum, row) => sum + row.stockValue, 0);
+  const smfgQuantity = semiFinishedGoods.reduce((sum, row) => sum + row.inventory, 0);
+  const smfgValue = semiFinishedGoods.reduce((sum, row) => sum + row.stockValue, 0);
+  const positiveFgCount = finishedGoods.filter((row) => row.inventory > 0).length;
+  const positiveSmfgCount = semiFinishedGoods.filter((row) => row.inventory > 0).length;
+  const goodsValueMix = [
+    { label: "Finished Goods", value: fgValue, color: "#213f67" },
+    { label: "Semi-finished Goods", value: smfgValue, color: "#3d78dd" },
+  ].filter((row) => row.value > 0);
+  const goodsStatusMix = [
+    { label: "In stock", value: data.production.goodsRows.filter((row) => row.status === "In stock").length, color: "#16a34a" },
+    { label: "Finished / zero stock", value: data.production.goodsRows.filter((row) => row.status === "Finished / zero stock").length, color: "#e2be2d" },
+  ].filter((row) => row.value > 0);
   const loadedRows = data.production.rows.length;
   const availableRows = data.production.rowCount || loadedRows;
 
@@ -28,13 +35,13 @@ export default async function ProductionPage() {
     <AGHealthShell active="production" company={data.company} connected={data.connected}>
       <HeroPanel
         eyebrow="Production"
-        title="Premium production report"
-        description="A clean production-only view: live totals, finished/semi-finished categorization, easy charts, and a searchable register for every extracted production row."
+        title="Live finished and semi-finished product stock"
+        description="This follows the reference production page: production output context at the top, then current finished-goods and semi-finished-goods product stock from ERP Itemcard."
         stats={[
-          { label: "Loaded rows", value: loadedRows.toLocaleString("en-US"), note: `${availableRows.toLocaleString("en-US")} rows reported by Business Central.`, icon: dashboardIcons.Route },
-          { label: "Daily production", value: formatQuantity(data.production.dailyProduction, "units"), note: "Rows finished today.", icon: dashboardIcons.Factory },
-          { label: "Monthly production", value: formatQuantity(data.production.monthlyProduction, "units"), note: "Rows finished in current month.", icon: dashboardIcons.BarChart3 },
-          { label: "Total production", value: formatQuantity(data.production.totalProduction, "units"), note: "Total extracted production output.", icon: dashboardIcons.Route },
+          { label: "Production stock lines", value: data.production.goodsRows.length.toLocaleString("en-US"), note: `${finishedGoods.length} FG and ${semiFinishedGoods.length} SMFG items from ERP Itemcard.`, icon: dashboardIcons.Route },
+          { label: "Finished goods quantity", value: formatQuantity(fgQuantity), note: `${positiveFgCount.toLocaleString("en-US")} positive-stock finished goods.`, icon: dashboardIcons.Factory },
+          { label: "Semi-finished quantity", value: formatQuantity(smfgQuantity), note: `${positiveSmfgCount.toLocaleString("en-US")} positive-stock semi-finished items.`, icon: dashboardIcons.BarChart3 },
+          { label: "Production output rows", value: loadedRows.toLocaleString("en-US"), note: `${availableRows.toLocaleString("en-US")} output rows reported by Business Central.`, icon: dashboardIcons.Route },
         ]}
         actions={[
           { label: "Sales Analysis", href: "/ag-health/sales-analysis" },
@@ -44,18 +51,18 @@ export default async function ProductionPage() {
       />
       <section className="mt-10">
         <SectionHeader eyebrow="Production Output" title="Production snapshot">
-          Production uses finished production order rows only. Daily, monthly, and total production are calculated separately from sales and inventory.
+          Production is organized like the reference: live output context plus the current FG/SMFG product stock table. Search and filters below let you manually find any product.
         </SectionHeader>
         <div className="mt-8 grid gap-6 xl:grid-cols-3">
-          <ExecutiveKpiCard title="Today’s Production" value={formatQuantity(data.production.dailyProduction, "units")} detail="Finished production order quantity dated today." source="Finishedproductionordgers" icon={dashboardIcons.Factory} />
-          <ExecutiveKpiCard title="Monthly Production" value={formatQuantity(data.production.monthlyProduction, "units")} detail="Finished production quantity in the current month." source="Finishedproductionordgers" icon={dashboardIcons.BarChart3} />
-          <ExecutiveKpiCard title="Total Production" value={formatQuantity(data.production.totalProduction, "units")} detail={`${loadedRows.toLocaleString("en-US")} rows loaded for this report; ${availableRows.toLocaleString("en-US")} rows reported by ERP.`} source="Finishedproductionordgers" accent="gold" icon={dashboardIcons.Route} />
+          <ExecutiveKpiCard title="Latest Production Output" value={data.production.rows[0] ? formatQuantity(data.production.rows[0].quantityProduced, "units") : "ERP pending"} detail={data.production.rows[0]?.productionDate || "No production output date mapped."} source="Finishedproductionordgers" icon={dashboardIcons.Factory} />
+          <ExecutiveKpiCard title="12-Month / Loaded Output" value={formatQuantity(data.production.totalProduction, "units")} detail={`${loadedRows.toLocaleString("en-US")} output rows loaded; ${availableRows.toLocaleString("en-US")} rows reported by ERP.`} source="Finishedproductionordgers" icon={dashboardIcons.BarChart3} />
+          <ExecutiveKpiCard title="Production Stock Lines" value={data.production.goodsRows.length.toLocaleString("en-US")} detail={`${finishedGoods.length.toLocaleString("en-US")} FG items and ${semiFinishedGoods.length.toLocaleString("en-US")} SMFG items from live Itemcard.`} source="Itemcard: FG / SMFG" accent="gold" icon={dashboardIcons.Route} />
         </div>
         <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <MetricCard label="Finished production" value={formatQuantity(finishedProduction, "units")} note="Production rows categorized as finished goods." icon={dashboardIcons.Boxes} />
-          <MetricCard label="Semi-finished production" value={formatQuantity(semiFinishedProduction, "units")} note="Production rows categorized as semi-finished goods." icon={dashboardIcons.PackageCheck} />
-          <MetricCard label="Other production" value={formatQuantity(otherProduction, "units")} note="Production rows not matched to FG/SMFG." icon={dashboardIcons.Route} />
-          <MetricCard label="Latest production" value={data.production.rows[0] ? formatQuantity(data.production.rows[0].quantityProduced, "units") : "ERP pending"} note={data.production.rows[0]?.productName || "No production rows mapped."} icon={dashboardIcons.Factory} />
+          <MetricCard label="Finished Goods" value={finishedGoods.length.toLocaleString("en-US")} note={`${positiveFgCount.toLocaleString("en-US")} positive-stock finished-good items.`} icon={dashboardIcons.Boxes} />
+          <MetricCard label="FG Quantity" value={formatQuantity(fgQuantity)} note={`${formatNpr(fgValue)} current FG stock value.`} icon={dashboardIcons.Boxes} />
+          <MetricCard label="Semi-finished Goods" value={semiFinishedGoods.length.toLocaleString("en-US")} note={`${positiveSmfgCount.toLocaleString("en-US")} positive-stock semi-finished items.`} icon={dashboardIcons.PackageCheck} />
+          <MetricCard label="SMFG Quantity" value={formatQuantity(smfgQuantity)} note={`${formatNpr(smfgValue)} current SMFG stock value.`} icon={dashboardIcons.PackageCheck} />
         </div>
         <div className="mt-8 grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
           <BarChart
@@ -65,11 +72,11 @@ export default async function ProductionPage() {
             axisFormatter={compactUnits}
             note="Monthly output from all extracted production rows, placed like the reference dashboard but using AG Health ERP data."
           />
-          <PieChartCard title="Production by Goods Category" slices={data.production.categoryMix} valueFormatter={(value) => formatQuantity(value, "units")} />
+          <PieChartCard title="Production Stock Value by Goods Type" slices={goodsValueMix} valueFormatter={formatNpr} />
         </div>
       </section>
       <section className="mt-8 grid gap-6 xl:grid-cols-2">
-        <PieChartCard title="Production Order Status" slices={data.production.statusMix} valueFormatter={(value) => formatQuantity(value)} />
+        <PieChartCard title="Production Stock Status" slices={goodsStatusMix} valueFormatter={(value) => formatQuantity(value)} />
         <article className="analysis-panel">
           <h3 className="text-2xl font-black text-[var(--ink)]">Inventory context for finished goods</h3>
           <p className="mt-3 text-sm font-semibold leading-6 text-[var(--text)]">This is only stock context. The searchable production register below remains production-only.</p>
@@ -80,7 +87,7 @@ export default async function ProductionPage() {
         </article>
       </section>
       <div className="mt-8">
-        <ProductionReport rows={data.production.rows} />
+        <ProductionReport rows={data.production.goodsRows} />
       </div>
     </AGHealthShell>
   );
