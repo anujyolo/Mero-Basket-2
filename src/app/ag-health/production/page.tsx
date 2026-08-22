@@ -59,9 +59,10 @@ function ComboChart({ bars, revenues }: { bars: { label: string; height: number 
   const revenueByMonth = new Map(revenues.map((row) => [row.label, row.amount]));
   const revenueMax = Math.max(...revenues.map((row) => row.amount), 0);
   const hasPositiveValues = bars.some((bar) => bar.height > 0) || revenueMax > 0;
+  const matchingRevenueMonths = bars.filter((bar) => revenueByMonth.has(bar.label)).length;
   return (
     <article className="chart-container">
-      <div className="chart-header"><div><h3 className="chart-title">Production vs Sales</h3><p className="chart-subtitle">Compare pieces produced with sales value by month.</p></div></div>
+      <div className="chart-header"><div><h3 className="chart-title">Production vs Sales</h3><p className="chart-subtitle">{matchingRevenueMonths > 0 ? "Same-month comparison of pieces produced and sales value." : "Production and sales are from different month windows right now, so this chart mainly shows production until matching sales months are available."}</p></div></div>
       <div className="mt-5 flex gap-4 text-sm font-black"><span className="text-emerald-600">Production</span><span className="text-[var(--navy)]">Revenue</span></div>
       <div className="premium-chart-surface mt-8 overflow-x-auto p-4">
       <div className="premium-chart-axis relative flex h-[360px] min-w-[48rem] items-end gap-5 px-4 pb-4">

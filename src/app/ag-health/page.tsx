@@ -36,10 +36,13 @@ export default async function AGHealthDashboard() {
   const productionByMonth = new Map(data.production.monthlyTrend.map((row) => [row.label, row.amount]));
   const costByMonth = new Map(data.salesAnalysis.monthlyCostTrend.map((row) => [row.label, row.amount]));
   const revenueByMonth = new Map(data.salesAnalysis.monthlyTrend.map((row) => [row.label, row.amount]));
-  const comboLabels = Array.from(new Set([
+  const commonComparisonLabels = data.production.monthlyTrend
+    .map((row) => row.label)
+    .filter((label) => revenueByMonth.has(label) || costByMonth.has(label));
+  const comboLabels = (commonComparisonLabels.length > 0 ? commonComparisonLabels : data.production.monthlyTrend.map((row) => row.label)).sort().slice(-12);
+  const financialLabels = Array.from(new Set([
     ...data.salesAnalysis.monthlyTrend.map((row) => row.label),
     ...data.salesAnalysis.monthlyCostTrend.map((row) => row.label),
-    ...data.production.monthlyTrend.map((row) => row.label),
   ])).sort().slice(-12);
   const productionMax = Math.max(...comboLabels.map((label) => productionByMonth.get(label) || 0), 0);
   const costMax = Math.max(...comboLabels.map((label) => costByMonth.get(label) || 0), 0);
@@ -59,17 +62,19 @@ export default async function AGHealthDashboard() {
       revenueAmount: formatNpr(revenue),
     };
   });
-  const revenueCostBars = comboLabels.map((label) => {
+  const financialRevenueMax = Math.max(...financialLabels.map((label) => revenueByMonth.get(label) || 0), 0);
+  const financialCostMax = Math.max(...financialLabels.map((label) => costByMonth.get(label) || 0), 0);
+  const financialMarginMax = Math.max(...financialLabels.map((month) => Math.max(0, (revenueByMonth.get(month) || 0) - (costByMonth.get(month) || 0))), 0);
+  const revenueCostBars = financialLabels.map((label) => {
     const revenue = revenueByMonth.get(label) || 0;
     const cost = costByMonth.get(label) || 0;
     const margin = Math.max(0, revenue - cost);
-    const marginMax = Math.max(...comboLabels.map((month) => Math.max(0, (revenueByMonth.get(month) || 0) - (costByMonth.get(month) || 0))), 0);
 
     return {
       label,
-      production: chartHeight(revenue, revenueMax),
-      purchases: chartHeight(cost, costMax),
-      revenue: chartHeight(margin, marginMax),
+      production: chartHeight(revenue, financialRevenueMax),
+      purchases: chartHeight(cost, financialCostMax),
+      revenue: chartHeight(margin, financialMarginMax),
       productionAmount: formatNpr(revenue),
       purchasesAmount: formatNpr(cost),
       revenueAmount: formatNpr(margin),
@@ -209,7 +214,7 @@ export default async function AGHealthDashboard() {
             title="Production, Purchases, and Sales"
             bars={latestProductionBars}
             middleLabel="Purchases / Cost"
-            note="Compare how much was produced, how much cost/purchase value was recorded, and how much was sold each month."
+            note={commonComparisonLabels.length > 0 ? "Same-month comparison of production, purchase/cost value, and sales." : "Production and sales currently come from different month windows, so this chart uses the production months and leaves sales/cost empty until matching months are available."}
           />
           <div className="grid gap-6 xl:grid-cols-2">
             <ComboBarChart
