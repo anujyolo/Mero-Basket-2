@@ -4,7 +4,7 @@ import { ProductionReport } from "./production-report";
 
 export const dynamic = "force-dynamic";
 
-const compactUnits = (value: number) => `${new Intl.NumberFormat("en-US", { notation: "compact", maximumFractionDigits: 1 }).format(value)} units`;
+const compactUnits = (value: number) => `${new Intl.NumberFormat("en-US", { notation: "compact", maximumFractionDigits: 1 }).format(value)} pcs`;
 
 function Kpi({ title, value, note, source, tone = "info" }: { title: string; value: string; note: string; source: string; tone?: "primary" | "info" | "gold" | "green" | "red" }) {
   const Icon = dashboardIcons.Factory;
@@ -30,12 +30,12 @@ function OutputChart({ bars }: { bars: { label: string; amount: number; height: 
         <div className="min-w-0 overflow-x-auto">
           <div className="premium-chart-axis relative flex h-[360px] min-w-[48rem] items-end gap-6 px-4 pb-4">
             {!hasPositiveValues ? <div className="premium-chart-empty">ERP returned production months, but no positive output values for this view.</div> : null}
-            {bars.map((bar) => <div key={bar.label} className="flex h-full min-w-12 flex-1 flex-col items-center justify-end gap-2"><span className="text-center text-[11px] font-black leading-tight text-[var(--navy)]">{compactUnits(bar.amount)}</span><span className="premium-chart-bar w-full bg-[#10b981]" title={`${bar.label}: ${formatQuantity(bar.amount, "units")}`} style={{ height: `${Math.min(96, Math.max(bar.amount > 0 ? 6 : 0, bar.height))}%` }} /><span className="max-w-20 truncate text-xs font-black text-[var(--text-light)]">{bar.label}</span></div>)}
+            {bars.map((bar) => <div key={bar.label} className="flex h-full min-w-12 flex-1 flex-col items-center justify-end gap-2"><span className="text-center text-[11px] font-black leading-tight text-[var(--navy)]">{compactUnits(bar.amount)}</span><span className="premium-chart-bar w-full bg-[#10b981]" title={`${bar.label}: ${formatQuantity(bar.amount, "pcs")}`} style={{ height: `${Math.min(96, Math.max(bar.amount > 0 ? 6 : 0, bar.height))}%` }} /><span className="max-w-20 truncate text-xs font-black text-[var(--text-light)]">{bar.label}</span></div>)}
           </div>
         </div>
       </div>
       <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-        {bars.slice(-8).map((bar) => <div key={`value-${bar.label}`} className="rounded-2xl bg-[var(--soft)] px-4 py-3"><p className="text-xs font-black uppercase tracking-[0.1em] text-[var(--text-light)]">{bar.label}</p><p className="mt-1 text-lg font-black text-[var(--navy)]">{formatQuantity(bar.amount, "units")}</p></div>)}
+        {bars.slice(-8).map((bar) => <div key={`value-${bar.label}`} className="rounded-2xl bg-[var(--soft)] px-4 py-3"><p className="text-xs font-black uppercase tracking-[0.1em] text-[var(--text-light)]">{bar.label}</p><p className="mt-1 text-lg font-black text-[var(--navy)]">{formatQuantity(bar.amount, "pcs")}</p></div>)}
       </div>
     </article>
   );
@@ -108,7 +108,7 @@ export default async function ProductionPage() {
   const mix = [{ label: "Finished Goods", value: fgValue, color: "#213f67" }, { label: "Semi-Finished Goods", value: smfgValue, color: "#10b981" }].filter((row) => row.value > 0);
   const latestMonth = data.production.monthlyTrend.at(-1);
   const summaryStats = [
-    { label: "Latest output month", value: latestMonth ? formatQuantity(latestMonth.amount, "units") : "ERP pending", detail: latestMonth ? `${latestMonth.label} production output.` : "No monthly production value mapped yet." },
+    { label: "Latest output month", value: latestMonth ? formatQuantity(latestMonth.amount, "pcs") : "ERP pending", detail: latestMonth ? `${latestMonth.label} production output.` : "No monthly production value mapped yet." },
     { label: "FG stock value", value: formatNpr(fgValue), detail: `${fg.length.toLocaleString("en-US")} finished-good item rows.` },
     { label: "SMFG stock value", value: formatNpr(smfgValue), detail: `${smfg.length.toLocaleString("en-US")} semi-finished item rows.` },
     { label: "Production rows", value: data.production.rows.length.toLocaleString("en-US"), detail: "Finished production order rows loaded from ERP." },
@@ -123,8 +123,8 @@ export default async function ProductionPage() {
         <div className="mt-6 inline-flex rounded-full bg-[var(--soft)] px-4 py-2 text-xs font-black uppercase tracking-[0.1em] text-[var(--text)]">ERP source: Finishedproductionordgers + Itemcard FG/SMFG</div>
       </section>
       <section className="mt-8 kpi-grid">
-        <Kpi title="Latest Production" value={latest ? formatQuantity(latest.quantityProduced, "units") : "ERP pending"} note={latest?.productionDate || "No date mapped."} source="Finishedproductionordgers" tone="primary" />
-        <Kpi title="12-Month Output" value={formatQuantity(data.production.totalProduction, "units")} note={`${data.production.rows.length.toLocaleString("en-US")} production rows loaded.`} source="Business Central" tone="green" />
+        <Kpi title="Latest Production" value={latest ? formatQuantity(latest.quantityProduced, "pcs") : "ERP pending"} note={latest?.productionDate || "No date mapped."} source="Finishedproductionordgers" tone="primary" />
+        <Kpi title="12-Month Output" value={formatQuantity(data.production.totalProduction, "pcs")} note={`${data.production.rows.length.toLocaleString("en-US")} production rows loaded.`} source="Business Central" tone="green" />
         <Kpi title="Production Stock Lines" value={data.production.goodsRows.length.toLocaleString("en-US")} note="Live finished and semi-finished product stock lines." source="Itemcard" tone="gold" />
         <Kpi title="Finished Goods" value={fg.length.toLocaleString("en-US")} note={`${formatQuantity(fgQty)} stock · ${formatNpr(fgValue)} value.`} source="FG" tone="info" />
         <Kpi title="Semi-Finished Goods" value={smfg.length.toLocaleString("en-US")} note={`${formatQuantity(smfgQty)} stock · ${formatNpr(smfgValue)} value.`} source="SMFG" tone="info" />

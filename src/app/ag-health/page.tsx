@@ -54,7 +54,7 @@ export default async function AGHealthDashboard() {
       production: chartHeight(production, productionMax),
       purchases: chartHeight(cost, costMax),
       revenue: chartHeight(revenue, revenueMax),
-      productionAmount: formatQuantity(production, "units"),
+      productionAmount: formatQuantity(production, "pcs"),
       purchasesAmount: formatNpr(cost),
       revenueAmount: formatNpr(revenue),
     };
@@ -129,7 +129,7 @@ export default async function AGHealthDashboard() {
     },
     {
       label: "Latest Production",
-      value: latestProductionMonth ? formatQuantity(latestProductionMonth.amount, "units") : "ERP pending",
+      value: latestProductionMonth ? formatQuantity(latestProductionMonth.amount, "pcs") : "ERP pending",
       detail: "Live production output in the latest confirmed production month.",
     },
   ];
@@ -150,8 +150,8 @@ export default async function AGHealthDashboard() {
   const metrics = [
     { label: "Total Inventory Value", value: formatNpr(data.dashboard.totalInventoryValue), note: "Current stock × purchase/cost rate from ERP items.", icon: dashboardIcons.Boxes },
     { label: "Packing Material Stock", value: formatQuantity(data.dashboard.packingMaterialStock), note: "Only PM category stock.", icon: dashboardIcons.PackageCheck },
-    { label: "Today’s Production", value: formatQuantity(data.dashboard.todayProduction, "units"), note: "Finished production orders dated today.", icon: dashboardIcons.Factory },
-    { label: "Monthly Production", value: formatQuantity(data.dashboard.monthlyProduction, "units"), note: "Current month finished production.", icon: dashboardIcons.Factory },
+    { label: "Today’s Production", value: formatQuantity(data.dashboard.todayProduction, "pcs"), note: "Finished production orders dated today.", icon: dashboardIcons.Factory },
+    { label: "Monthly Production", value: formatQuantity(data.dashboard.monthlyProduction, "pcs"), note: "Current month finished production.", icon: dashboardIcons.Factory },
     { label: "Monthly Sales", value: formatNpr(data.dashboard.monthlySales), note: "Current/latest month sales.", icon: dashboardIcons.BarChart3 },
     { label: "Total Freight", value: formatNpr(data.dashboard.totalFreight), note: "Mapped freight-related GL rows.", icon: dashboardIcons.Truck },
     { label: "Pending Orders", value: formatQuantity(data.dashboard.pendingOrders), note: "Pending or processing orders.", icon: dashboardIcons.Route },
@@ -223,7 +223,7 @@ export default async function AGHealthDashboard() {
             <BarChart
               title="Production Trend"
               bars={data.production.monthlyTrend.slice(-12)}
-              valueFormatter={(value) => formatQuantity(value, "units")}
+              valueFormatter={(value) => formatQuantity(value, "pcs")}
               axisFormatter={compactQuantity}
               tone="green"
               note="Live output quantities grouped by production month from finished production orders."
