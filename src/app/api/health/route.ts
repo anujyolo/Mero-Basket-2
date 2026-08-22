@@ -18,6 +18,7 @@ export async function GET() {
         webReachable: erp.webReachable,
         serviceConfigured: erp.serviceConfigured,
         serviceReachable: erp.serviceReachable,
+        serviceStatusCode: erp.serviceStatusCode,
         credentials: erp.hasCredentials ? "configured" : "missing",
       },
       requiredData: [

@@ -249,6 +249,17 @@ credentials must stay local and must never be committed to GitHub.
 3. Add `BUSINESS_CENTRAL_SERVICE_BASE_URL` when the ERP admin provides the
    published API/OData URL.
 
+For AG Health, the current OData test endpoint is:
+
+```text
+http://erp.agilenepal.com:5048/AgHealth/ODataV4/Company(%27AG%20Health%20Live%27)/VendorLedgerEntries
+```
+
+If `/api/erp/status` returns `authentication-rejected`, the OData service is
+reachable but Business Central rejected the configured credentials. In many
+Business Central installs, OData uses a web service access key or service
+account credential rather than the normal browser-login password.
+
 Useful local checks:
 
 ```sh
