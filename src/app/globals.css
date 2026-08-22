@@ -1,21 +1,23 @@
 @import "tailwindcss";
 
 :root {
-  --canvas: #f6f7f3;
+  --canvas: #f6f8fb;
   --panel: #ffffff;
-  --soft: #f3f6f2;
-  --ink: #16231f;
-  --muted: #5f6d67;
-  --border: #d9e0da;
-  --border-strong: #bcc8c0;
-  --green: #176b55;
-  --green-hover: #125643;
-  --green-soft: #e7f2ed;
-  --mint: #74d7b1;
-  --amber: #f1b654;
-  --warning: #9b6116;
-  --warning-soft: #fff5df;
-  --warning-border: #f0d4a3;
+  --soft: #f8fafc;
+  --cream: #fbfaf5;
+  --ink: #0f172a;
+  --navy: #213f67;
+  --blue: #3f86ff;
+  --gold: #e7bd27;
+  --muted: #64748b;
+  --muted-strong: #475569;
+  --muted-light: #94a3b8;
+  --border: #e2e8f0;
+  --border-strong: #cbd5e1;
+  --icon-soft: #f8fafc;
+  --pill: #f1f5f9;
+  --shadow: 0 14px 35px rgba(30, 58, 95, 0.08);
+  --shadow-sm: 0 8px 18px rgba(30, 58, 95, 0.07);
 }
 
 * {
@@ -40,7 +42,7 @@ a {
 }
 
 ::selection {
-  background: rgba(23, 107, 85, 0.18);
+  background: rgba(63, 134, 255, 0.18);
 }
 
 .page-grid {
@@ -58,6 +60,24 @@ a {
   .text-balance {
     text-wrap: balance;
   }
+}
+
+.dashboard-card {
+  min-height: 360px;
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  background: var(--panel);
+  padding: 2.25rem;
+  box-shadow: var(--shadow-sm);
+  border-top-width: 5px;
+}
+
+.dashboard-card-blue {
+  border-top-color: var(--blue);
+}
+
+.dashboard-card-gold {
+  border-top-color: var(--gold);
 }
 
 @media (prefers-reduced-motion: reduce) {
