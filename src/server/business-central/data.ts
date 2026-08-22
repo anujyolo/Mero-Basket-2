@@ -4,6 +4,7 @@ import { getBusinessCentralAuthHeader, getBusinessCentralConfig } from "./config
 type ODataResponse<T> = {
   value?: T[];
   "@odata.count"?: number;
+  "@odata.nextLink"?: string;
 };
 
 type ItemRow = {
@@ -115,7 +116,11 @@ export type PackingMaterialRow = {
 };
 
 export type ProductionReportRow = {
+  orderNumber: string;
+  sourceNumber: string;
   productName: string;
+  goodsCategory: "Finished Goods" | "Semi-finished Goods" | "Other Production";
+  status: string;
   productionDate: string;
   quantityProduced: number;
   unit: string;
@@ -178,9 +183,13 @@ export type AGHealthDashboardData = {
   packingMaterials: PackingMaterialRow[];
   production: {
     rows: ProductionReportRow[];
+    rowCount: number;
     dailyProduction: number;
     monthlyProduction: number;
     totalProduction: number;
+    categoryMix: { label: string; value: number; color: string }[];
+    statusMix: { label: string; value: number; color: string }[];
+    monthlyTrend: { label: string; amount: number; height: number }[];
   };
   salesAnalysis: {
     totalSales: number;
@@ -265,7 +274,22 @@ function includesAny(value: string, terms: string[]) {
   return terms.some((term) => clean.includes(term));
 }
 
-async function fetchEntity<T>(entity: string, query: string) {
+function productionGoodsCategory(categoryCode: string, productText: string): ProductionReportRow["goodsCategory"] {
+  const cleanCategory = categoryCode.toUpperCase();
+  const cleanProduct = productText.toUpperCase();
+
+  if (cleanCategory.startsWith("SMFG") || cleanProduct.includes("SEMI") || cleanProduct.includes("SMFG")) {
+    return "Semi-finished Goods";
+  }
+
+  if (cleanCategory.startsWith("FG") || cleanProduct.includes("FINISHED") || cleanProduct.includes("FG")) {
+    return "Finished Goods";
+  }
+
+  return "Other Production";
+}
+
+async function fetchEntity<T>(entity: string, query: string, options: { pageLimit?: number } = {}) {
   const config = getBusinessCentralConfig();
   const authHeader = getBusinessCentralAuthHeader();
 
@@ -273,22 +297,35 @@ async function fetchEntity<T>(entity: string, query: string) {
     throw new Error("Business Central OData URL or credentials are missing.");
   }
 
-  const response = await fetch(`${config.companyODataUrl}/${entity}?${query}`, {
-    cache: "no-store",
-    headers: {
-      Accept: "application/json",
-      Authorization: authHeader,
-    },
-  });
+  const rows: T[] = [];
+  let count: number | null = null;
+  let nextUrl: string | undefined = `${config.companyODataUrl}/${entity}?${query}`;
+  let pagesRead = 0;
+  const pageLimit = options.pageLimit ?? 1;
 
-  if (!response.ok) {
-    throw new Error(`${entity} returned ${response.status}`);
+  while (nextUrl && pagesRead < pageLimit) {
+    const response = await fetch(nextUrl, {
+      cache: "no-store",
+      headers: {
+        Accept: "application/json",
+        Authorization: authHeader,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`${entity} returned ${response.status}`);
+    }
+
+    const data = (await response.json()) as ODataResponse<T>;
+    rows.push(...(data.value || []));
+    count = data["@odata.count"] ?? count;
+    nextUrl = data["@odata.nextLink"];
+    pagesRead += 1;
   }
 
-  const data = (await response.json()) as ODataResponse<T>;
   return {
-    rows: data.value || [],
-    count: data["@odata.count"] ?? null,
+    rows,
+    count,
   };
 }
 
@@ -343,9 +380,13 @@ function emptyData(message: string, company: string): AGHealthDashboardData {
     packingMaterials: [],
     production: {
       rows: [],
+      rowCount: 0,
       dailyProduction: 0,
       monthlyProduction: 0,
       totalProduction: 0,
+      categoryMix: [],
+      statusMix: [],
+      monthlyTrend: [],
     },
     salesAnalysis: {
       totalSales: 0,
@@ -394,6 +435,7 @@ export async function getAGHealthDashboardData(): Promise<AGHealthDashboardData>
       fetchEntity<ProductionRow>(
         "Finishedproductionordgers",
         "$select=No,Description,Source_No,Quantity,Location_Code,Starting_Date,Ending_Date,Finished_Date,Routing_No,Status&$top=5000&$count=true",
+        { pageLimit: 6 },
       ),
       fetchEntity<SalesOrderRow>(
         "SalesOrder",
@@ -435,6 +477,19 @@ export async function getAGHealthDashboardData(): Promise<AGHealthDashboardData>
         stockValue: currentStock * purchaseRate,
       };
     });
+    const itemCategoryByKey = new Map<string, string>();
+
+    for (const item of itemsResult.rows) {
+      const category = item.Inventory_Posting_Group || item.Item_Category_Code || "";
+
+      if (item.No && category) {
+        itemCategoryByKey.set(item.No.toUpperCase(), category);
+      }
+
+      if (item.Description && category) {
+        itemCategoryByKey.set(item.Description.toUpperCase(), category);
+      }
+    }
 
     const inventoryByCategory = [...Map.groupBy(inventoryRows, (row) => row.category).entries()]
       .sort(([a], [b]) => a.localeCompare(b))
@@ -474,16 +529,23 @@ export async function getAGHealthDashboardData(): Promise<AGHealthDashboardData>
 
     const productionRows = productionResult.rows.map((row) => {
       const productionDate = row.Finished_Date || row.Ending_Date || row.Starting_Date || "Not mapped";
+      const productName = row.Description || row.Source_No || row.No || "Unnamed product";
+      const sourceNumber = row.Source_No || "Not mapped";
+      const categoryCode = itemCategoryByKey.get(sourceNumber.toUpperCase()) || itemCategoryByKey.get(productName.toUpperCase()) || "";
 
       return {
-        productName: row.Description || row.Source_No || row.No || "Unnamed product",
+        orderNumber: row.No || "Not mapped",
+        sourceNumber,
+        productName,
+        goodsCategory: productionGoodsCategory(categoryCode, `${productName} ${sourceNumber}`),
+        status: row.Status || "Finished",
         productionDate,
         quantityProduced: toNumber(row.Quantity),
         unit: "units",
         productionLine: row.Routing_No || row.Location_Code || "Not mapped",
         materialConsumption: "Not mapped",
       };
-    });
+    }).sort((a, b) => b.productionDate.localeCompare(a.productionDate));
     const dailyProduction = productionRows
       .filter((row) => row.productionDate === TODAY)
       .reduce((sum, row) => sum + row.quantityProduced, 0);
@@ -491,6 +553,32 @@ export async function getAGHealthDashboardData(): Promise<AGHealthDashboardData>
       .filter((row) => row.productionDate.startsWith(CURRENT_MONTH))
       .reduce((sum, row) => sum + row.quantityProduced, 0);
     const totalProduction = productionRows.reduce((sum, row) => sum + row.quantityProduced, 0);
+    const productionMonthlyRaw = [...Map.groupBy(productionRows.filter((row) => row.productionDate !== "Not mapped"), (row) => row.productionDate.slice(0, 7)).entries()]
+      .map(([label, rows]) => [label, rows.reduce((sum, row) => sum + row.quantityProduced, 0)] as const)
+      .sort(([a], [b]) => a.localeCompare(b));
+    const productionMonthlyMax = Math.max(...productionMonthlyRaw.map(([, amount]) => amount), 0);
+    const productionCategoryColors: Record<ProductionReportRow["goodsCategory"], string> = {
+      "Finished Goods": "#213f67",
+      "Semi-finished Goods": "#3d78dd",
+      "Other Production": "#e2be2d",
+    };
+    const productionCategoryMix = (["Finished Goods", "Semi-finished Goods", "Other Production"] as const)
+      .map((label) => ({
+        label,
+        value: productionRows
+          .filter((row) => row.goodsCategory === label)
+          .reduce((sum, row) => sum + row.quantityProduced, 0),
+        color: productionCategoryColors[label],
+      }))
+      .filter((row) => row.value > 0);
+    const productionStatusColors = ["#213f67", "#3d78dd", "#e2be2d", "#16a34a", "#8b5cf6", "#64748b"];
+    const productionStatusMix = [...Map.groupBy(productionRows, (row) => row.status || "Not mapped").entries()]
+      .map(([label, rows], index) => ({
+        label,
+        value: rows.length,
+        color: productionStatusColors[index % productionStatusColors.length],
+      }))
+      .filter((row) => row.value > 0);
 
     const monthlySalesMap = new Map<string, number>();
     const yearlySalesMap = new Map<string, number>();
@@ -614,10 +702,14 @@ export async function getAGHealthDashboardData(): Promise<AGHealthDashboardData>
       inventoryCategoryMix,
       packingMaterials,
       production: {
-        rows: productionRows.slice(0, 15),
+        rows: productionRows,
+        rowCount: productionResult.count ?? productionRows.length,
         dailyProduction,
         monthlyProduction,
         totalProduction,
+        categoryMix: productionCategoryMix,
+        statusMix: productionStatusMix,
+        monthlyTrend: productionMonthlyRaw.map(([label, amount]) => ({ label, amount, height: heightFor(amount, productionMonthlyMax) })),
       },
       salesAnalysis: {
         totalSales,
