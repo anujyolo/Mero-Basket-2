@@ -9,9 +9,36 @@ const compactNpr = (value: number) => `NPR ${new Intl.NumberFormat("en-US", {
   maximumFractionDigits: 1,
 }).format(value)}`;
 
+function SummaryStrip({ stats }: { stats: { label: string; value: string; detail: string }[] }) {
+  return (
+    <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      {stats.map((stat) => (
+        <article key={stat.label} className="rounded-[1.35rem] border border-[var(--border)] bg-white/90 p-5 shadow-[var(--shadow-soft)]">
+          <p className="text-xs font-black uppercase tracking-[0.13em] text-[var(--text-light)]">{stat.label}</p>
+          <p className="mt-3 text-2xl font-black text-[var(--ink)]">{stat.value}</p>
+          <p className="mt-2 text-sm font-semibold leading-6 text-[var(--text)]">{stat.detail}</p>
+        </article>
+      ))}
+    </div>
+  );
+}
+
 export default async function InventoryReportPage() {
   const data = await getAGHealthDashboardData();
   const inventoryRows = data.inventoryByCategory.flatMap((category) => category.rows);
+  const positiveRows = inventoryRows.filter((row) => row.currentStock > 0);
+  const highestValueItem = inventoryRows.slice().sort((a, b) => b.stockValue - a.stockValue)[0];
+  const totalStockQuantity = inventoryRows.reduce((sum, row) => sum + row.currentStock, 0);
+  const topItemMax = Math.max(...inventoryRows.map((row) => row.stockValue), 0);
+  const topItemBars = inventoryRows
+    .slice()
+    .sort((a, b) => b.stockValue - a.stockValue)
+    .slice(0, 12)
+    .map((row) => ({
+      label: row.itemName.slice(0, 14),
+      amount: row.stockValue,
+      height: topItemMax > 0 ? Math.max(4, Math.round((row.stockValue / topItemMax) * 92)) : 0,
+    }));
   const topCategoryBars = data.inventoryByCategory
     .slice()
     .sort((a, b) => b.stockValue - a.stockValue)
@@ -41,8 +68,16 @@ export default async function InventoryReportPage() {
       />
       <section className="mt-10">
         <SectionHeader eyebrow="Category Value" title="Inventory by category">
-          Inventory is grouped by ERP category. Each category is shown separately so packing materials, finished goods, raw materials, and other item groups do not get mixed.
+          Inventory is grouped by ERP posting group/category. This explains what stock is raw material, packing material, finished goods, or another ERP item group before the detail tables.
         </SectionHeader>
+        <SummaryStrip
+          stats={[
+            { label: "Inventory rows", value: inventoryRows.length.toLocaleString("en-US"), detail: "Total Itemcard rows currently visible in this inventory report." },
+            { label: "Positive stock rows", value: positiveRows.length.toLocaleString("en-US"), detail: "Rows where current ERP stock is greater than zero." },
+            { label: "Total stock quantity", value: formatQuantity(totalStockQuantity), detail: "Sum of current stock across all visible inventory rows." },
+            { label: "Highest value item", value: highestValueItem ? formatNpr(highestValueItem.stockValue) : "ERP pending", detail: highestValueItem?.itemName || "No inventory rows mapped yet." },
+          ]}
+        />
         <div className="mt-8 grid gap-6 xl:grid-cols-3">
           <ExecutiveKpiCard title="Inventory Value" value={formatNpr(data.dashboard.totalInventoryValue)} detail="Total value across all ERP item categories." source="Itemcard" icon={dashboardIcons.Boxes} />
           <ExecutiveKpiCard title="Packing Material Stock" value={formatQuantity(data.dashboard.packingMaterialStock)} detail="Only PM category stock." source="Itemcard: PM" icon={dashboardIcons.PackageCheck} />
@@ -51,6 +86,16 @@ export default async function InventoryReportPage() {
         <div className="mt-8 grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
           <BarChart title="Top Inventory Categories by Stock Value" bars={topCategoryBars} valueFormatter={formatNpr} axisFormatter={compactNpr} />
           <PieChartCard title="Inventory Category Mix" slices={data.inventoryCategoryMix} valueFormatter={formatNpr} />
+        </div>
+        <div className="mt-8">
+          <BarChart
+            title="Top Item Stock Value"
+            bars={topItemBars}
+            valueFormatter={formatNpr}
+            axisFormatter={compactNpr}
+            tone="green"
+            note="Highest current inventory values by ERP item. Stock value = current stock × purchase/cost rate from Itemcard."
+          />
         </div>
       </section>
       <div className="mt-8">
@@ -86,6 +131,25 @@ export default async function InventoryReportPage() {
           </article>
         ))}
       </div>
+      <article className="chart-container mt-8">
+        <div className="chart-header">
+          <div>
+            <h3 className="chart-title">Exact Inventory Field Trace</h3>
+            <p className="chart-subtitle">These are the ERP fields used to calculate the inventory cards, charts, and tables on this page.</p>
+          </div>
+        </div>
+        <DataTable
+          headers={["Data shown", "ERP source", "Fields used"]}
+          rows={[
+            ["Item/category separation", "Itemcard", "Inventory_Posting_Group, Item_Category_Code"],
+            ["Current stock", "Itemcard", "Inventory, Base_Unit_of_Measure"],
+            ["Purchase quantity", "Itemcard", "Qty_on_Purch_Order"],
+            ["Purchase/cost rate", "Itemcard", "Last_Direct_Cost, Unit_Cost, Unit_Price"],
+            ["Supplier/date", "Itemcard", "Vendor_No, Last_Date_Modified"],
+            ["Stock value", "Calculated", "Current stock × purchase/cost rate"],
+          ]}
+        />
+      </article>
     </AGHealthShell>
   );
 }
