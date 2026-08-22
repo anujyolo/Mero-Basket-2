@@ -27,20 +27,37 @@ npm run typecheck
 npm run build
 ```
 
+## ERP dashboard scope
+
+The current screen is an ERP-ready executive dashboard. It is prepared for:
+
+- sales analysis and completed sales
+- receiver/customer visibility
+- raw materials and finished goods
+- production entries
+- orders and notifications
+- bank balances
+- approval requests
+- users, audit logs, and rate limits
+
+Live figures are intentionally not fabricated. The dashboard will show real
+numbers after the ERP connection details are supplied.
+
 ## Delivery order
 
 Features are added and verified one at a time:
 
 1. Project foundation
-2. Authentication and access control
-3. Main layout and navigation
-4. Executive dashboard
-5. Inventory
-6. Production
-7. Employee management
-8. Attendance
-9. Reports and exports
-10. Settings and integration status
+2. ERP dashboard foundation
+3. Authentication and access control
+4. Main layout and navigation
+5. Live ERP connector
+6. Inventory
+7. Production
+8. Employee management
+9. Attendance
+10. Reports and exports
+11. Settings and integration status
 
 ## Backup routine
 

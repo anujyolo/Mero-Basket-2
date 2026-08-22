@@ -1,16 +1,21 @@
 @import "tailwindcss";
 
 :root {
-  --canvas: #f5f4ef;
-  --soft: #f8f8f4;
+  --canvas: #f6f7f3;
+  --panel: #ffffff;
+  --soft: #f3f6f2;
   --ink: #16231f;
-  --muted: #61706a;
-  --border: #d8ded7;
-  --border-strong: #c5cec6;
+  --muted: #5f6d67;
+  --border: #d9e0da;
+  --border-strong: #bcc8c0;
   --green: #176b55;
   --green-hover: #125643;
+  --green-soft: #e7f2ed;
   --mint: #74d7b1;
   --amber: #f1b654;
+  --warning: #9b6116;
+  --warning-soft: #fff5df;
+  --warning-border: #f0d4a3;
 }
 
 * {
@@ -47,6 +52,12 @@ a {
     linear-gradient(90deg, rgba(22, 35, 31, 0.035) 1px, transparent 1px);
   background-size: 44px 44px;
   mask-image: linear-gradient(to bottom, black, transparent 76%);
+}
+
+@supports (text-wrap: balance) {
+  .text-balance {
+    text-wrap: balance;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
