@@ -14,7 +14,13 @@ export type BusinessCentralStatus = {
 
 async function checkUrl(url: string, headers?: HeadersInit) {
   try {
-    const response = await fetch(url, {
+    const testUrl = new URL(url);
+
+    if (!testUrl.searchParams.has("$top")) {
+      testUrl.searchParams.set("$top", "1");
+    }
+
+    const response = await fetch(testUrl, {
       cache: "no-store",
       headers,
       redirect: "manual",
