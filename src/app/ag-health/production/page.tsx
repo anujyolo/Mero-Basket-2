@@ -1,4 +1,4 @@
-import { AGHealthShell, PieChartCard, dashboardIcons } from "../_components";
+import { AGHealthShell, DataTable, PieChartCard, dashboardIcons } from "../_components";
 import { formatNpr, formatQuantity, getAGHealthDashboardData } from "@/server/business-central/data";
 import { ProductionReport } from "./production-report";
 
@@ -38,7 +38,22 @@ function OutputChart({ bars }: { bars: { label: string; amount: number; height: 
   );
 }
 
-function ComboChart({ bars, revenues }: { bars: { label: string; height: number }[]; revenues: { amount: number }[] }) {
+function SummaryStrip({ stats }: { stats: { label: string; value: string; detail: string }[] }) {
+  return (
+    <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      {stats.map((stat) => (
+        <article key={stat.label} className="rounded-[1.35rem] border border-[var(--border)] bg-white/90 p-5 shadow-[var(--shadow-soft)]">
+          <p className="text-xs font-black uppercase tracking-[0.13em] text-[var(--text-light)]">{stat.label}</p>
+          <p className="mt-3 text-2xl font-black text-[var(--ink)]">{stat.value}</p>
+          <p className="mt-2 text-sm font-semibold leading-6 text-[var(--text)]">{stat.detail}</p>
+        </article>
+      ))}
+    </div>
+  );
+}
+
+function ComboChart({ bars, revenues }: { bars: { label: string; height: number }[]; revenues: { label: string; amount: number }[] }) {
+  const revenueByMonth = new Map(revenues.map((row) => [row.label, row.amount]));
   const revenueMax = Math.max(...revenues.map((row) => row.amount), 0);
   const hasPositiveValues = bars.some((bar) => bar.height > 0) || revenueMax > 0;
   return (
@@ -48,8 +63,9 @@ function ComboChart({ bars, revenues }: { bars: { label: string; height: number 
       <div className="premium-chart-surface mt-8 overflow-x-auto p-4">
       <div className="premium-chart-axis relative flex h-[360px] min-w-[48rem] items-end gap-5 px-4 pb-4">
         {!hasPositiveValues ? <div className="premium-chart-empty">No positive ERP values for this grouped chart yet.</div> : null}
-        {bars.map((bar, index) => {
-          const revenueHeight = revenueMax > 0 ? Math.max(6, Math.round(((revenues[index]?.amount || 0) / revenueMax) * 92)) : 0;
+        {bars.map((bar) => {
+          const revenue = revenueByMonth.get(bar.label) || 0;
+          const revenueHeight = revenueMax > 0 && revenue > 0 ? Math.max(6, Math.round((revenue / revenueMax) * 92)) : 0;
           return <div key={bar.label} className="flex min-w-12 flex-1 flex-col items-center justify-end gap-2"><span className="flex h-full w-full items-end justify-center gap-1"><span className="premium-chart-bar w-3 bg-[#10b981]" style={{ height: `${bar.height > 0 ? Math.max(6, bar.height) : 0}%` }} /><span className="premium-chart-bar w-3 bg-[var(--navy)]" style={{ height: `${revenueHeight}%` }} /></span><span className="max-w-20 truncate text-xs font-black text-[var(--text-light)]">{bar.label}</span></div>;
         })}
       </div>
@@ -87,6 +103,13 @@ export default async function ProductionPage() {
   const latest = data.production.rows[0];
   const activeMonths = data.production.monthlyTrend.filter((row) => row.amount > 0).length;
   const mix = [{ label: "Finished Goods", value: fgValue, color: "#213f67" }, { label: "Semi-Finished Goods", value: smfgValue, color: "#10b981" }].filter((row) => row.value > 0);
+  const latestMonth = data.production.monthlyTrend.at(-1);
+  const summaryStats = [
+    { label: "Latest output month", value: latestMonth ? formatQuantity(latestMonth.amount, "units") : "ERP pending", detail: latestMonth ? `${latestMonth.label} production output.` : "No monthly production value mapped yet." },
+    { label: "FG stock value", value: formatNpr(fgValue), detail: `${fg.length.toLocaleString("en-US")} finished-good item rows.` },
+    { label: "SMFG stock value", value: formatNpr(smfgValue), detail: `${smfg.length.toLocaleString("en-US")} semi-finished item rows.` },
+    { label: "Production rows", value: data.production.rows.length.toLocaleString("en-US"), detail: "Finished production order rows loaded from ERP." },
+  ];
 
   return (
     <AGHealthShell active="production" company={data.company} connected={data.connected}>
@@ -104,6 +127,7 @@ export default async function ProductionPage() {
         <Kpi title="Semi-Finished Goods" value={smfg.length.toLocaleString("en-US")} note={`${formatQuantity(smfgQty)} stock · ${formatNpr(smfgValue)} value.`} source="SMFG" tone="info" />
         <Kpi title="Active Production Months" value={activeMonths.toLocaleString("en-US")} note="Months with positive production output." source="Trend" tone="green" />
       </section>
+      <SummaryStrip stats={summaryStats} />
       <section className="mt-8 premium-grid">
         <OutputChart bars={bars} />
         <div className="premium-grid-2"><ComboChart bars={bars} revenues={revenues} /><AreaChart bars={bars} /></div>
@@ -113,6 +137,25 @@ export default async function ProductionPage() {
         </div>
       </section>
       <div className="mt-8"><ProductionReport rows={data.production.goodsRows} /></div>
+      <article className="chart-container mt-8">
+        <div className="chart-header">
+          <div>
+            <h3 className="chart-title">Exact Production Field Trace</h3>
+            <p className="chart-subtitle">ERP fields used to calculate production output, FG/SMFG stock, and the production stock table.</p>
+          </div>
+        </div>
+        <DataTable
+          headers={["Data shown", "ERP source", "Fields used"]}
+          rows={[
+            ["Production output", "Finishedproductionordgers", "Quantity, Finished_Date, Ending_Date, Starting_Date"],
+            ["Product / source item", "Finishedproductionordgers", "Description, Source_No, No"],
+            ["Production line", "Finishedproductionordgers", "Routing_No, Location_Code"],
+            ["Finished goods stock", "Itemcard", "Inventory_Posting_Group = FG, Inventory, Unit_Cost"],
+            ["Semi-finished goods stock", "Itemcard", "Inventory_Posting_Group / category mapped as SMFG, Inventory, Unit_Cost"],
+            ["Stock value", "Calculated", "Inventory × Unit_Cost / purchase rate"],
+          ]}
+        />
+      </article>
     </AGHealthShell>
   );
 }
