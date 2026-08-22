@@ -123,9 +123,9 @@ export default async function AGHealthDashboard() {
       detail: "Raw-material rows with live quantity greater than zero.",
     },
     {
-      label: "Latest Cost Amount",
+      label: "Latest Purchases",
       value: formatNpr(latestCost),
-      detail: latestCostTrendMonth ? `Cost_Amount_Actual recorded in ${latestCostTrendMonth.label}.` : "Waiting for live monthly cost totals.",
+      detail: latestCostTrendMonth ? `Mapped from SalesDashboard Cost_Amount_Actual in ${latestCostTrendMonth.label} until a separate purchase-total feed is available.` : "Waiting for live monthly purchase/cost totals.",
     },
     {
       label: "Latest Production",
@@ -183,7 +183,7 @@ export default async function AGHealthDashboard() {
         <h2 className="mt-4 text-4xl font-black tracking-tight">Executive Snapshot</h2>
         <p className="mt-4 max-w-5xl text-xl leading-9 text-[var(--text)]">Large cards are placed first. Each card names the ERP source so the numbers are easier to understand.</p>
         <div className="mt-8 grid gap-6 xl:grid-cols-3">
-          <ExecutiveKpiCard title="Business Central Sales" value={formatNpr(data.dashboard.totalSales)} detail="Live sales total from the connected Business Central SalesDashboard feed." source="SalesDashboard" icon={dashboardIcons.BarChart3} />
+          <ExecutiveKpiCard title="Business Central Sales (12-Month)" value={formatNpr(data.dashboard.totalSales)} detail="Live Business Central sales from the connected SalesDashboard feed, matching the reference dashboard’s rolling executive sales card." source="SalesDashboard" icon={dashboardIcons.BarChart3} />
           <ExecutiveKpiCard title="Business Central Receivables" value={formatNpr(data.dashboard.receivables)} detail="Customer receivables from the live trial balance row mapped for Sundry Debtor." source="ExcelTemplateTrialBalance" icon={dashboardIcons.ReceiptText} />
           <ExecutiveKpiCard title="Business Central Bank Balance" value={formatNpr(data.dashboard.bankBalance)} detail={`Current live Business Central bank balance across ${data.dashboard.bankRows || 0} BANK rows.`} source="Bankacccard1" accent="gold" icon={dashboardIcons.Banknote} />
         </div>
@@ -206,10 +206,10 @@ export default async function AGHealthDashboard() {
             note="Monthly sales placement follows the reference dashboard, while values come from this project’s ERP feed."
           />
           <ComboBarChart
-            title="Business Central Production Output, Cost, and Revenue"
+            title="Business Central Production Output, Purchases, and Revenue"
             bars={latestProductionBars}
-            middleLabel="Cost Amount"
-            note="This comparison uses exact ERP values by month: production quantity from finished production orders, cost amount from SalesDashboard Cost_Amount_Actual, and revenue from SalesDashboard Sales_Amount_Actual. Each series is scaled separately so units and NPR values stay readable."
+            middleLabel="Purchases / Cost"
+            note="This follows the 4002 placement. Production and revenue are exact ERP values; the purchase column currently uses the exact available Cost_Amount_Actual field until a separate monthly purchase-total feed is mapped."
           />
           <div className="grid gap-6 xl:grid-cols-2">
             <ComboBarChart
@@ -218,7 +218,7 @@ export default async function AGHealthDashboard() {
               firstLabel="Revenue"
               middleLabel="COGS / Cost"
               thirdLabel="Gross Margin"
-              note="Reference dashboard placement for revenue and cost comparison. Values here come from SalesDashboard revenue and Cost_Amount_Actual; gross margin is calculated from those two fields."
+              note="Reference dashboard placement for revenue, COGS/cost, and margin comparison. Values come from SalesDashboard revenue and Cost_Amount_Actual; gross margin is calculated from those two fields."
             />
             <BarChart
               title="Production Trend"
