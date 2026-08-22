@@ -1,4 +1,4 @@
-import { AGHealthShell, BarChart, ExecutiveKpiCard, HeroPanel, MetricCard, SectionHeader, dashboardIcons } from "../_components";
+import { AGHealthShell, BarChart, DataTable, ExecutiveKpiCard, HeroPanel, MetricCard, SectionHeader, dashboardIcons } from "../_components";
 import { formatNpr, formatPercent, getAGHealthDashboardData } from "@/server/business-central/data";
 import { SalesLineExplorer } from "./sales-line-explorer";
 
@@ -60,12 +60,32 @@ export default async function SalesAnalysisPage() {
         <MetricCard label="Growth" value={formatPercent(data.salesAnalysis.growthPercentage)} note="Current vs previous month." icon={dashboardIcons.BarChart3} />
       </div>
       <div className="mt-8 grid gap-6 xl:grid-cols-2">
-        <BarChart title="Monthly Sales Trend" bars={data.salesAnalysis.monthlyTrend} valueFormatter={formatNpr} axisFormatter={compactNpr} />
+        <BarChart title="Monthly Sales Trend" bars={data.salesAnalysis.monthlyTrend} valueFormatter={formatNpr} axisFormatter={compactNpr} note="Exact Sales_Amount_Actual grouped by Posting_Date month." />
+        <BarChart title="Monthly Cost / COGS Trend" bars={data.salesAnalysis.monthlyCostTrend} valueFormatter={formatNpr} axisFormatter={compactNpr} tone="gold" note="Exact Cost_Amount_Actual grouped by Posting_Date month." />
         <BarChart title="Yearly Sales Trend" bars={data.salesAnalysis.yearlyTrend} valueFormatter={formatNpr} axisFormatter={compactNpr} />
       </div>
       <div className="mt-8">
         <SalesLineExplorer rows={data.salesAnalysis.lineRows} sourceNote={data.salesAnalysis.lineSourceNote} />
       </div>
+      <article className="chart-container mt-8">
+        <div className="chart-header">
+          <div>
+            <h3 className="chart-title">Exact Sales Field Trace</h3>
+            <p className="chart-subtitle">ERP fields used for sales totals, product search, dealer analysis, and location drilldown.</p>
+          </div>
+        </div>
+        <DataTable
+          headers={["Data shown", "ERP source", "Fields used"]}
+          rows={[
+            ["Total/monthly/yearly sales", "SalesDashboard", "Posting_Date, Sales_Amount_Actual"],
+            ["Cost / COGS trend", "SalesDashboard", "Posting_Date, Cost_Amount_Actual"],
+            ["Dealer/customer", "SalesOrder", "Sell_to_Customer_Name"],
+            ["Province / district / city", "SalesOrder", "Ship_to_City, Sell_to_City, Ship_to_County, Sell_to_County"],
+            ["Product and quantity", "salesDocumentLines", "number, description, itemCategoryCode, quantity, quantityShipped, quantityInvoiced"],
+            ["Order/delivery status", "SalesOrder + salesDocumentLines", "Status, outstandingQuantity"],
+          ]}
+        />
+      </article>
     </AGHealthShell>
   );
 }
