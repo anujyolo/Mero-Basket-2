@@ -5,6 +5,11 @@ import { formatNpr, formatQuantity, getAGHealthDashboardData } from "@/server/bu
 
 export const dynamic = "force-dynamic";
 
+const compactNpr = (value: number) => `NPR ${new Intl.NumberFormat("en-US", {
+  notation: "compact",
+  maximumFractionDigits: 1,
+}).format(value)}`;
+
 export default async function AGHealthDashboard() {
   const data = await getAGHealthDashboardData();
   const latestSalesMonth = data.salesAnalysis.monthlyTrend.at(-1)?.label || "Latest month";
@@ -19,13 +24,9 @@ export default async function AGHealthDashboard() {
     { label: "Packing Material Stock", value: formatQuantity(data.dashboard.packingMaterialStock), note: "Only PM category stock.", icon: dashboardIcons.PackageCheck },
     { label: "Today’s Production", value: formatQuantity(data.dashboard.todayProduction, "units"), note: "Finished production orders dated today.", icon: dashboardIcons.Factory },
     { label: "Monthly Production", value: formatQuantity(data.dashboard.monthlyProduction, "units"), note: "Current month finished production.", icon: dashboardIcons.Factory },
-    { label: "Total Sales", value: formatNpr(data.dashboard.totalSales), note: "Live SalesDashboard feed.", icon: dashboardIcons.BarChart3 },
     { label: "Monthly Sales", value: formatNpr(data.dashboard.monthlySales), note: "Current/latest month sales.", icon: dashboardIcons.BarChart3 },
-    { label: "Receivables", value: formatNpr(data.dashboard.receivables), note: "Customer trial balance row from ERP.", icon: dashboardIcons.ReceiptText },
-    { label: "Bank Balance", value: formatNpr(data.dashboard.bankBalance), note: `${data.dashboard.bankRows || 0} live BANK rows.`, icon: dashboardIcons.Banknote },
     { label: "Total Freight", value: formatNpr(data.dashboard.totalFreight), note: "Mapped freight-related GL rows.", icon: dashboardIcons.Truck },
     { label: "Distributed Expense", value: formatNpr(data.dashboard.distributedExpense), note: "Mapped distribution/allocation expenses.", icon: dashboardIcons.WalletCards },
-    { label: "Total Orders", value: formatQuantity(data.dashboard.totalOrders), note: "SalesOrder records from ERP.", icon: dashboardIcons.ClipboardCheck },
     { label: "Pending Orders", value: formatQuantity(data.dashboard.pendingOrders), note: "Pending or processing orders.", icon: dashboardIcons.Route },
   ];
 
@@ -59,7 +60,7 @@ export default async function AGHealthDashboard() {
           <ExecutiveKpiCard title="Business Central Receivables" value={formatNpr(data.dashboard.receivables)} detail="Customer receivables from the live trial balance row mapped for Sundry Debtor." source="ExcelTemplateTrialBalance" icon={dashboardIcons.ReceiptText} />
           <ExecutiveKpiCard title="Business Central Bank Balance" value={formatNpr(data.dashboard.bankBalance)} detail={`Current live Business Central bank balance across ${data.dashboard.bankRows || 0} BANK rows.`} source="Bankacccard1" accent="gold" icon={dashboardIcons.Banknote} />
         </div>
-        <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+        <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           {metrics.map((metric) => <MetricCard key={metric.label} {...metric} />)}
         </div>
       </section>
@@ -69,7 +70,13 @@ export default async function AGHealthDashboard() {
         <h2 className="mt-4 text-4xl font-black tracking-tight">Monthly Revenue and Trend Views</h2>
         <p className="mt-4 max-w-5xl text-xl leading-9 text-[var(--text)]">Charts are grouped under the KPI cards, matching the reference dashboard’s reading order.</p>
         <div className="mt-8 grid gap-6">
-          <BarChart title="Business Central Monthly Sales Revenue" bars={data.salesAnalysis.monthlyTrend} valueFormatter={formatNpr} />
+          <BarChart
+            title="Business Central Monthly Sales Revenue"
+            bars={data.salesAnalysis.monthlyTrend}
+            valueFormatter={formatNpr}
+            axisFormatter={compactNpr}
+            note="Monthly sales placement follows the reference dashboard, while values come from this project’s ERP feed."
+          />
           <ComboBarChart title="Business Central Production Output, Packing Stock, and Revenue" bars={latestProductionBars} />
           <div className="grid gap-6 xl:grid-cols-2">
             <PieChartCard title="Inventory Value by Category" slices={data.inventoryCategoryMix} valueFormatter={formatNpr} />

@@ -205,26 +205,61 @@ export function DataTable({ headers, rows }: { headers: string[]; rows: (string 
   );
 }
 
-export function BarChart({ title, bars, valueFormatter }: { title: string; bars: { label: string; amount: number; height: number }[]; valueFormatter: (value: number) => string }) {
+export function BarChart({
+  title,
+  bars,
+  valueFormatter,
+  axisFormatter,
+  note,
+}: {
+  title: string;
+  bars: { label: string; amount: number; height: number }[];
+  valueFormatter: (value: number) => string;
+  axisFormatter?: (value: number) => string;
+  note?: string;
+}) {
   const max = Math.max(...bars.map((bar) => bar.amount), 0);
   const ticks = [max, max * 0.75, max * 0.5, max * 0.25, 0];
+  const formatAxis = axisFormatter || valueFormatter;
 
   return (
-    <article className="analysis-panel">
-      <h3 className="text-2xl font-black text-[var(--ink)]">{title}</h3>
-      <div className="mt-8 grid grid-cols-[4.5rem_1fr] gap-3">
-        <div className="flex h-72 flex-col justify-between pb-8 text-right text-xs font-black text-[var(--text-light)]">
-          {ticks.map((tick) => <span key={tick}>{valueFormatter(tick)}</span>)}
+    <article className="analysis-panel overflow-hidden">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h3 className="text-2xl font-black text-[var(--ink)]">{title}</h3>
+          {note ? <p className="mt-2 max-w-3xl text-sm font-semibold leading-6 text-[var(--text)]">{note}</p> : null}
         </div>
-        <div className="flex h-72 items-end gap-3 border-b border-l border-[var(--border-strong)] px-4 pb-4">
-          {bars.map((bar) => (
-            <div key={bar.label} className="flex flex-1 flex-col items-center justify-end gap-2">
-              <span className="w-full rounded-t-xl bg-[var(--navy)] shadow-[0_8px_18px_rgba(33,63,103,0.18)]" title={valueFormatter(bar.amount)} style={{ height: `${bar.height}%` }} />
-              <span className="text-xs font-semibold text-[var(--text-light)] [writing-mode:vertical-rl] sm:[writing-mode:horizontal-tb]">{bar.label}</span>
-            </div>
-          ))}
-        </div>
+        <span className="rounded-full bg-[var(--soft)] px-4 py-2 text-xs font-black uppercase tracking-[0.08em] text-[var(--text)]">
+          {bars.length.toLocaleString("en-US")} points
+        </span>
       </div>
+      {bars.length === 0 ? (
+        <div className="mt-6 rounded-3xl border border-dashed border-[var(--border-strong)] bg-[var(--soft)] p-8 text-center text-sm font-black text-[var(--text)]">
+          No live chart rows mapped yet.
+        </div>
+      ) : (
+        <div className="mt-6 rounded-[28px] bg-[var(--soft)] p-4">
+          <div className="grid grid-cols-[5.8rem_minmax(0,1fr)] gap-4">
+            <div className="flex h-64 flex-col justify-between pb-10 text-right text-[11px] font-black leading-tight text-[var(--text-light)]">
+              {ticks.map((tick, index) => <span key={`${tick}-${index}`}>{formatAxis(tick)}</span>)}
+            </div>
+            <div className="min-w-0 overflow-x-auto">
+              <div className="flex h-64 min-w-[38rem] items-end gap-3 border-b border-l border-[var(--border-strong)] px-4 pb-4">
+                {bars.map((bar) => (
+                  <div key={bar.label} className="flex min-w-12 flex-1 flex-col items-center justify-end gap-2">
+                    <span
+                      className="w-full rounded-t-xl bg-gradient-to-t from-[var(--navy)] to-[var(--blue)] shadow-[0_10px_22px_rgba(33,63,103,0.2)]"
+                      title={`${bar.label}: ${valueFormatter(bar.amount)}`}
+                      style={{ height: `${Math.min(96, Math.max(bar.amount > 0 ? 6 : 0, bar.height))}%` }}
+                    />
+                    <span className="max-w-20 truncate text-xs font-black text-[var(--text-light)]" title={bar.label}>{bar.label}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </article>
   );
 }

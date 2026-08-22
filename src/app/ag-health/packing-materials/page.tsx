@@ -3,6 +3,11 @@ import { formatNpr, formatQuantity, getAGHealthDashboardData } from "@/server/bu
 
 export const dynamic = "force-dynamic";
 
+const compactQuantity = (value: number) => new Intl.NumberFormat("en-US", {
+  notation: "compact",
+  maximumFractionDigits: 1,
+}).format(value);
+
 export default async function PackingMaterialsPage() {
   const data = await getAGHealthDashboardData();
   const maxStock = Math.max(...data.packingMaterials.map((row) => row.currentStock), 0);
@@ -42,7 +47,7 @@ export default async function PackingMaterialsPage() {
           <ExecutiveKpiCard title="Highest Stock PM" value={topItem ? formatQuantity(topItem.currentStock, topItem.unit) : "ERP pending"} detail={topItem?.packingMaterialName || "No PM rows mapped."} source="Itemcard" accent="gold" icon={dashboardIcons.Boxes} />
         </div>
         <div className="mt-8">
-          <BarChart title="Top Packing Material Stock" bars={stockBars} valueFormatter={(value) => formatQuantity(value)} />
+          <BarChart title="Top Packing Material Stock" bars={stockBars} valueFormatter={(value) => formatQuantity(value)} axisFormatter={compactQuantity} />
         </div>
       </section>
       <div className="mt-8 grid gap-4 md:grid-cols-3">

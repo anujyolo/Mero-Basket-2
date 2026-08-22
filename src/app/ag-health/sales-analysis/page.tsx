@@ -3,6 +3,11 @@ import { formatNpr, formatPercent, getAGHealthDashboardData } from "@/server/bus
 
 export const dynamic = "force-dynamic";
 
+const compactNpr = (value: number) => `NPR ${new Intl.NumberFormat("en-US", {
+  notation: "compact",
+  maximumFractionDigits: 1,
+}).format(value)}`;
+
 export default async function SalesAnalysisPage() {
   const data = await getAGHealthDashboardData();
   const latestMonth = data.salesAnalysis.monthlyTrend.at(-1)?.label || "Latest month";
@@ -57,8 +62,8 @@ export default async function SalesAnalysisPage() {
         <MetricCard label="Growth" value={formatPercent(data.salesAnalysis.growthPercentage)} note="Current vs previous month." icon={dashboardIcons.BarChart3} />
       </div>
       <div className="mt-8 grid gap-6 xl:grid-cols-2">
-        <BarChart title="Monthly Sales Trend" bars={data.salesAnalysis.monthlyTrend} valueFormatter={formatNpr} />
-        <BarChart title="Yearly Sales Trend" bars={data.salesAnalysis.yearlyTrend} valueFormatter={formatNpr} />
+        <BarChart title="Monthly Sales Trend" bars={data.salesAnalysis.monthlyTrend} valueFormatter={formatNpr} axisFormatter={compactNpr} />
+        <BarChart title="Yearly Sales Trend" bars={data.salesAnalysis.yearlyTrend} valueFormatter={formatNpr} axisFormatter={compactNpr} />
       </div>
     </AGHealthShell>
   );

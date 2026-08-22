@@ -3,6 +3,11 @@ import { formatNpr, formatQuantity, getAGHealthDashboardData } from "@/server/bu
 
 export const dynamic = "force-dynamic";
 
+const compactUnits = (value: number) => `${new Intl.NumberFormat("en-US", {
+  notation: "compact",
+  maximumFractionDigits: 1,
+}).format(value)} units`;
+
 export default async function ProductionPage() {
   const data = await getAGHealthDashboardData();
   const byDate = new Map<string, number>();
@@ -11,7 +16,10 @@ export default async function ProductionPage() {
     byDate.set(row.productionDate, (byDate.get(row.productionDate) || 0) + row.quantityProduced);
   }
 
-  const rawBars = [...byDate.entries()].slice(0, 12);
+  const rawBars = [...byDate.entries()]
+    .filter(([label]) => label !== "Not mapped")
+    .sort(([a], [b]) => a.localeCompare(b))
+    .slice(-12);
   const maxProduction = Math.max(...rawBars.map(([, amount]) => amount), 0);
   const productionBars = rawBars.map(([label, amount]) => ({
     label,
@@ -59,14 +67,15 @@ export default async function ProductionPage() {
           <MetricCard label="SMFG Quantity" value={formatQuantity(smfgQuantity)} note={`${formatNpr(smfgValue)} current SMFG stock value.`} icon={dashboardIcons.PackageCheck} />
         </div>
         <div className="mt-8">
-          <BarChart title="Visible Production Output" bars={productionBars} valueFormatter={(value) => formatQuantity(value, "units")} />
+          <BarChart
+            title="Production Output Trend"
+            bars={productionBars}
+            valueFormatter={(value) => formatQuantity(value, "units")}
+            axisFormatter={compactUnits}
+            note="Latest mapped production dates from Business Central, grouped so the production story is easy to scan."
+          />
         </div>
       </section>
-      <div className="mt-8 grid gap-4 md:grid-cols-3">
-        <MetricCard label="Daily production" value={formatQuantity(data.production.dailyProduction, "units")} note="Rows finished today." icon={dashboardIcons.Factory} />
-        <MetricCard label="Monthly production" value={formatQuantity(data.production.monthlyProduction, "units")} note="Rows finished in the current month." icon={dashboardIcons.Factory} />
-        <MetricCard label="Total production" value={formatQuantity(data.production.totalProduction, "units")} note="Total extracted production quantity." icon={dashboardIcons.Factory} />
-      </div>
       <article className="mt-8 analysis-panel">
         <DataTable
           headers={["Product name", "Production date", "Qty produced", "Unit", "Machine / line", "Material consumption"]}

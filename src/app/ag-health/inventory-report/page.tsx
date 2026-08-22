@@ -3,6 +3,11 @@ import { formatNpr, formatQuantity, getAGHealthDashboardData } from "@/server/bu
 
 export const dynamic = "force-dynamic";
 
+const compactNpr = (value: number) => `NPR ${new Intl.NumberFormat("en-US", {
+  notation: "compact",
+  maximumFractionDigits: 1,
+}).format(value)}`;
+
 export default async function InventoryReportPage() {
   const data = await getAGHealthDashboardData();
   const topCategoryBars = data.inventoryByCategory
@@ -42,7 +47,7 @@ export default async function InventoryReportPage() {
           <ExecutiveKpiCard title="Category Count" value={data.inventoryByCategory.length.toLocaleString("en-US")} detail="All visible ERP inventory groups remain separated." source="Inventory_Posting_Group" accent="gold" icon={dashboardIcons.Route} />
         </div>
         <div className="mt-8 grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-          <BarChart title="Top Inventory Categories by Stock Value" bars={topCategoryBars} valueFormatter={formatNpr} />
+          <BarChart title="Top Inventory Categories by Stock Value" bars={topCategoryBars} valueFormatter={formatNpr} axisFormatter={compactNpr} />
           <PieChartCard title="Inventory Category Mix" slices={data.inventoryCategoryMix} valueFormatter={formatNpr} />
         </div>
       </section>
