@@ -273,7 +273,7 @@ export function ComboBarChart({
   bars,
   note,
   firstLabel = "Production Output",
-  middleLabel = "Purchases",
+  middleLabel = "Cost / Value",
   thirdLabel = "Revenue",
 }: {
   title: string;
