@@ -251,11 +251,8 @@ export function BarChart({
                 {!hasPositiveValues ? <div className="premium-chart-empty">ERP returned chart labels, but no positive values for this view.</div> : null}
                 {bars.map((bar) => (
                   <div key={bar.label} className="flex h-full min-w-12 flex-1 flex-col items-center justify-end gap-2">
-                    <span
-                      className={`premium-chart-bar w-full ${barClassName}`}
-                      title={`${bar.label}: ${valueFormatter(bar.amount)}`}
-                      style={{ height: `${Math.min(96, Math.max(bar.amount > 0 ? 6 : 0, bar.height))}%` }}
-                    />
+                    <span className="text-center text-[11px] font-black leading-tight text-[var(--navy)]">{valueFormatter(bar.amount)}</span>
+                    <span className={`premium-chart-bar w-full ${barClassName}`} title={`${bar.label}: ${valueFormatter(bar.amount)}`} style={{ height: `${Math.min(96, Math.max(bar.amount > 0 ? 6 : 0, bar.height))}%` }} />
                     <span className="max-w-20 truncate text-xs font-black text-[var(--text-light)]" title={bar.label}>{bar.label}</span>
                   </div>
                 ))}

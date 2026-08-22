@@ -30,9 +30,12 @@ function OutputChart({ bars }: { bars: { label: string; amount: number; height: 
         <div className="min-w-0 overflow-x-auto">
           <div className="premium-chart-axis relative flex h-[360px] min-w-[48rem] items-end gap-6 px-4 pb-4">
             {!hasPositiveValues ? <div className="premium-chart-empty">ERP returned production months, but no positive output values for this view.</div> : null}
-            {bars.map((bar) => <div key={bar.label} className="flex h-full min-w-12 flex-1 flex-col items-center justify-end gap-2"><span className="premium-chart-bar w-full bg-[#10b981]" title={`${bar.label}: ${formatQuantity(bar.amount, "units")}`} style={{ height: `${Math.min(96, Math.max(bar.amount > 0 ? 6 : 0, bar.height))}%` }} /><span className="max-w-20 truncate text-xs font-black text-[var(--text-light)]">{bar.label}</span></div>)}
+            {bars.map((bar) => <div key={bar.label} className="flex h-full min-w-12 flex-1 flex-col items-center justify-end gap-2"><span className="text-center text-[11px] font-black leading-tight text-[var(--navy)]">{compactUnits(bar.amount)}</span><span className="premium-chart-bar w-full bg-[#10b981]" title={`${bar.label}: ${formatQuantity(bar.amount, "units")}`} style={{ height: `${Math.min(96, Math.max(bar.amount > 0 ? 6 : 0, bar.height))}%` }} /><span className="max-w-20 truncate text-xs font-black text-[var(--text-light)]">{bar.label}</span></div>)}
           </div>
         </div>
+      </div>
+      <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+        {bars.slice(-8).map((bar) => <div key={`value-${bar.label}`} className="rounded-2xl bg-[var(--soft)] px-4 py-3"><p className="text-xs font-black uppercase tracking-[0.1em] text-[var(--text-light)]">{bar.label}</p><p className="mt-1 text-lg font-black text-[var(--navy)]">{formatQuantity(bar.amount, "units")}</p></div>)}
       </div>
     </article>
   );
