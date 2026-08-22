@@ -5,14 +5,33 @@ export type BusinessCentralConfig = {
   webUrl: string;
   company: string;
   serviceBaseUrl: string | null;
+  companyODataUrl: string | null;
   hasCredentials: boolean;
 };
 
+function getCompanyODataUrl(serviceBaseUrl: string | null) {
+  if (!serviceBaseUrl) {
+    return null;
+  }
+
+  try {
+    const url = new URL(serviceBaseUrl);
+    url.search = "";
+    url.pathname = url.pathname.replace(/\/[^/]+\/?$/, "");
+    return url.toString().replace(/\/$/, "");
+  } catch {
+    return null;
+  }
+}
+
 export function getBusinessCentralConfig(): BusinessCentralConfig {
+  const serviceBaseUrl = process.env.BUSINESS_CENTRAL_SERVICE_BASE_URL?.trim() || null;
+
   return {
     webUrl: process.env.BUSINESS_CENTRAL_WEB_URL?.trim() || DEFAULT_WEB_URL,
     company: process.env.BUSINESS_CENTRAL_COMPANY?.trim() || DEFAULT_COMPANY,
-    serviceBaseUrl: process.env.BUSINESS_CENTRAL_SERVICE_BASE_URL?.trim() || null,
+    serviceBaseUrl,
+    companyODataUrl: getCompanyODataUrl(serviceBaseUrl),
     hasCredentials: Boolean(process.env.BUSINESS_CENTRAL_USERNAME && process.env.BUSINESS_CENTRAL_PASSWORD),
   };
 }

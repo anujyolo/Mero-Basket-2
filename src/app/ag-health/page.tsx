@@ -20,9 +20,12 @@ import {
   Truck,
   User,
   X,
+  type LucideIcon,
 } from "lucide-react";
 
-import { getBusinessCentralConfig } from "@/server/business-central/config";
+import { formatNpr, formatPercent, formatQuantity, getAGHealthDashboardData } from "@/server/business-central/data";
+
+export const dynamic = "force-dynamic";
 
 const navTabs = [
   { label: "Dashboard", href: "/ag-health", icon: Home, active: true },
@@ -37,110 +40,15 @@ const navTabs = [
   { label: "Freight And Distribution Expenses", href: "#freight", icon: Truck },
 ] as const;
 
-const heroStats = [
-  { label: "Source mode", value: "Live ERP", detail: "Dynamics 365 Business Central", icon: Database },
-  { label: "Confirmed entities", value: "4", detail: "ERP entities positively mapped from this machine", icon: ShieldCheck },
-  { label: "Coverage ready", value: "10", detail: "Dashboard items already have a route or workflow", icon: Gauge },
-  { label: "Latest live month", value: "2083-04", detail: "Last checked 2083-05-06 05:50:36Z", icon: RefreshCcw },
-] as const;
-
-const kpiCards = [
-  {
-    title: "Business Central Sales (12-Month)",
-    value: "NPR 552,264,700",
-    detail: "Live Business Central sales recognized from Sep 2025 to Aug 2026. This is a rolling 12-month total from the connected BC sales feed, not a single-month or today-only figure.",
-    source: "SalesDashboard",
-    fields: "Fields: Posting_Date + Sales_Amount_Actual | Window: Sep 2025 to Aug 2026",
-    accent: "blue",
-    icon: BarChart3,
-  },
-  {
-    title: "Business Central Receivables",
-    value: "NPR 135,137,991",
-    detail: "Current customer receivables from the live Business Central customer trial balance row for Sundry Debtor.",
-    source: "ExcelTemplateTrialBalance",
-    fields: "Fields: number=110405 + balanceAtDateDebit + balanceAtDateCredit",
-    accent: "blue",
-    icon: Database,
-  },
-  {
-    title: "Business Central Bank Balance",
-    value: "NPR 797,787",
-    detail: "Current live Business Central bank balance net of OD across 9 BANK rows. Bank OD of NPR 0 and loan liabilities are separated from this card.",
-    source: "Bankacccard1",
-    fields: "Fields: Blocked + Bank_Acc_Posting_Group + Balance_LCY",
-    accent: "gold",
-    icon: Banknote,
-  },
-] as const;
-
-const quickMetrics = [
-  { label: "This month sales", value: "NPR 2,517,130", note: "2083-05 from live Business Central billed sales net of credit memos" },
-  { label: "12-month sales", value: "NPR 552,264,700", note: "Sum of the visible Business Central sales window on this dashboard" },
-  { label: "Raw material stock", value: "10,856,326.7135 kg", note: "250 materials currently show positive stock" },
-  { label: "Latest gross margin", value: "41.6%", note: "From the latest confirmed trend month on this screen" },
-] as const;
-
-const salesBars = [
-  { month: "2082-05", value: 22 },
-  { month: "2082-06", value: 52 },
-  { month: "2082-07", value: 51 },
-  { month: "2082-08", value: 71 },
-  { month: "2082-09", value: 82 },
-  { month: "2082-10", value: 49 },
-  { month: "2082-11", value: 35 },
-  { month: "2082-12", value: 38 },
-  { month: "2083-01", value: 39 },
-  { month: "2083-02", value: 57 },
-  { month: "2083-03", value: 66 },
-  { month: "2083-04", value: 73 },
-  { month: "2083-05", value: 25 },
-] as const;
-
-const combinedBars = [
-  { month: "2082-05", production: 43, purchases: 18, revenue: 0 },
-  { month: "2082-06", production: 41, purchases: 51, revenue: 37 },
-  { month: "2082-07", production: 69, purchases: 34, revenue: 51 },
-  { month: "2082-08", production: 76, purchases: 45, revenue: 67 },
-  { month: "2082-09", production: 82, purchases: 61, revenue: 74 },
-  { month: "2082-10", production: 64, purchases: 22, revenue: 67 },
-  { month: "2082-11", production: 55, purchases: 12, revenue: 49 },
-  { month: "2082-12", production: 52, purchases: 36, revenue: 38 },
-  { month: "2083-01", production: 59, purchases: 27, revenue: 31 },
-  { month: "2083-02", production: 27, purchases: 44, revenue: 57 },
-  { month: "2083-03", production: 54, purchases: 32, revenue: 66 },
-  { month: "2083-04", production: 37, purchases: 50, revenue: 73 },
-] as const;
-
-const operationStats = [
-  { label: "ERP RM items", value: "302", note: "Material master rows currently classified under the RM posting group" },
-  { label: "Positive stock items", value: "250", note: "Raw-material rows with live quantity greater than zero" },
-  { label: "Latest purchases", value: "NPR 5,001,627", note: "Purchases recorded in 2083-04" },
-  { label: "Latest production", value: "3.7M", note: "Live production output in the latest confirmed month" },
-] as const;
-
-const materialRows = [
-  ["15 SSS White Ho Skyloft 220MM", "RM-SM0018", "16.03"],
-  ["15 SSS White Ho Skyloft 230MM", "RM-SM0017", "17.11"],
-  ["Airlaid Paper (160mm x 70gsm)", "RM0068", "24,315.463"],
-  ["Budget Wrapper Large 4", "PM0064", "181,505"],
-  ["Budget Wrapper Medium 5(Purple)", "PM0123", "86,390"],
-  ["CONSTRUCTION GLUE (Technomelt DM 2815)", "RM0036", "720.475"],
-  ["Hydrophobic Nonwoven Backsheet", "RM0002", "2,851.9756"],
-  ["LG SAP GS-415ND", "RM0166", "9,670"],
-  ["PE Film Sagun Printed", "RM0015", "8,896.323"],
-  ["Sumitomo SA60SXII SAP Powder for Diaper", "RM0033", "24,800"],
-] as const;
-
-const moduleCards = [
-  { title: "Executive Dashboard", meta: "Live ERP", detail: "Executive preview: NPR 552.3M in sales, NPR 135.1M in receivables, and NPR 797.8K in live ERP bank balance net of OD.", href: "#overview", icon: BarChart3 },
-  { title: "Business Central", meta: "4 entities", detail: "ERP preview: 1.2K inventory items and 52 zero-stock alerts with live drill-down available.", href: "#business-central", icon: Database },
-  { title: "Source Audit", meta: "15 mapped groups", detail: "Traceability preview: 15 field groups are currently mapped into the executive overview from live ERP keys.", href: "#source-audit", icon: FileSearch },
-  { title: "Raw Materials", meta: "302 ERP items", detail: "Inventory preview: 10.9M kg on hand across 250 raw materials with positive stock, plus low-stock alerts.", href: "#raw-materials", icon: Package },
-  { title: "Production", meta: "81.4M output", detail: "Production preview: 12 active months in the executive window with 81.4M total output.", href: "#production", icon: Factory },
-  { title: "Orders", meta: "NPR 36.4M", detail: "Payables preview: NPR 36.4M across 5,558 live vendor-ledger rows and 179 vendors.", href: "#orders", icon: ClipboardCheck },
-  { title: "Freight And Distribution Expenses", meta: "Needs GL data", detail: "Monthly freight and distribution expense view appears here when GL tracking data is available.", href: "#freight", icon: Truck },
-] as const;
+type KpiCardModel = {
+  title: string;
+  value: string;
+  detail: string;
+  source: string;
+  fields: string;
+  accent: "blue" | "gold";
+  icon: LucideIcon;
+};
 
 const fieldTrace = [
   ["Billing date", "Posting_Date"],
@@ -181,7 +89,7 @@ function NavTab({ item }: { item: (typeof navTabs)[number] }) {
   );
 }
 
-function KpiCard({ card }: { card: (typeof kpiCards)[number] }) {
+function KpiCard({ card }: { card: KpiCardModel }) {
   const Icon = card.icon;
 
   return (
@@ -252,8 +160,64 @@ function GunteAssistant() {
   );
 }
 
-export default function AGHealthDashboard() {
-  const businessCentral = getBusinessCentralConfig();
+export default async function AGHealthDashboard() {
+  const data = await getAGHealthDashboardData();
+  const kpiCards: KpiCardModel[] = [
+    {
+      title: "Business Central Sales (12-Month)",
+      value: formatNpr(data.values.sales12Month),
+      detail: `Live Business Central sales recognized from ${data.sourceWindow}. This is a rolling dashboard window from the connected BC sales feed, not a single-month or today-only figure.`,
+      source: "SalesDashboard",
+      fields: "Fields: Posting_Date + Sales_Amount_Actual",
+      accent: "blue",
+      icon: BarChart3,
+    },
+    {
+      title: "Business Central Receivables",
+      value: formatNpr(data.values.receivables),
+      detail: "Current customer receivables from the live Business Central customer trial balance row for Sundry Debtor.",
+      source: "ExcelTemplateTrialBalance",
+      fields: "Fields: number=110405 + balanceAtDateDebit + balanceAtDateCredit",
+      accent: "blue",
+      icon: Database,
+    },
+    {
+      title: "Business Central Bank Balance",
+      value: formatNpr(data.values.bankBalance),
+      detail: `Current live Business Central bank balance net of blocked accounts across ${data.entityCounts.bankRows} BANK rows.`,
+      source: "Bankacccard1",
+      fields: "Fields: Blocked + Bank_Acc_Posting_Group + Balance_LCY",
+      accent: "gold",
+      icon: Banknote,
+    },
+  ];
+  const heroStats = [
+    { label: "Source mode", value: data.connected ? "Live ERP" : "ERP pending", detail: "Dynamics 365 Business Central", icon: Database },
+    { label: "Confirmed entities", value: data.connected ? "7" : "0", detail: "Sales, receivables, bank, stock, vendors, purchases, production", icon: ShieldCheck },
+    { label: "Sales rows", value: data.entityCounts.salesRows.toLocaleString("en-US"), detail: "Rows summarized from the mapped sales feed", icon: Gauge },
+    { label: "Latest live month", value: data.labels.latestSalesMonth, detail: `Last checked ${new Date(data.checkedAt).toLocaleString("en-US", { timeZone: "Asia/Kathmandu" })}`, icon: RefreshCcw },
+  ];
+  const quickMetrics = [
+    { label: "This month sales", value: formatNpr(data.values.currentMonthSales), note: `${data.labels.latestSalesMonth} from live Business Central sales entries` },
+    { label: "12-month sales", value: formatNpr(data.values.sales12Month), note: "Sum of the visible Business Central sales window on this dashboard" },
+    { label: "Raw material stock", value: formatQuantity(data.values.rawMaterialStock), note: `${data.entityCounts.rawMaterialPositiveRows} materials currently show positive stock` },
+    { label: "Latest gross margin", value: formatPercent(data.values.grossMarginPercent), note: "Calculated from live sales amount and actual cost in the sales window" },
+  ];
+  const operationStats = [
+    { label: "ERP RM items", value: data.entityCounts.rawMaterialRows.toLocaleString("en-US"), note: "Material master rows currently classified under the RM posting group" },
+    { label: "Positive stock items", value: data.entityCounts.rawMaterialPositiveRows.toLocaleString("en-US"), note: "Raw-material rows with live quantity greater than zero" },
+    { label: "Purchase line sample", value: formatNpr(data.values.latestPurchases), note: "Current extracted purchase-line total from the first mapped ERP batch" },
+    { label: "Production sample", value: formatQuantity(data.values.latestProduction, "units"), note: "Current extracted finished-production quantity from the first mapped ERP batch" },
+  ];
+  const moduleCards = [
+    { title: "Executive Dashboard", meta: data.connected ? "Live ERP" : "Pending", detail: `Executive view: ${formatNpr(data.values.sales12Month)} in sales, ${formatNpr(data.values.receivables)} in receivables, and ${formatNpr(data.values.bankBalance)} in live ERP bank balance.`, href: "#overview", icon: BarChart3 },
+    { title: "Business Central", meta: `${data.entityCounts.rawMaterialRows.toLocaleString("en-US")} RM items`, detail: `ERP preview: ${data.entityCounts.rawMaterialPositiveRows.toLocaleString("en-US")} positive-stock raw material rows with live drill-down ready.`, href: "#business-central", icon: Database },
+    { title: "Source Audit", meta: "Mapped fields", detail: "Traceability preview: exact Business Central field names are shown beside the dashboard sections.", href: "#source-audit", icon: FileSearch },
+    { title: "Raw Materials", meta: `${data.entityCounts.rawMaterialRows.toLocaleString("en-US")} ERP items`, detail: `Inventory preview: ${formatQuantity(data.values.rawMaterialStock)} on hand across positive raw-material stock rows.`, href: "#raw-materials", icon: Package },
+    { title: "Production", meta: data.entityCounts.productionRows ? `${data.entityCounts.productionRows.toLocaleString("en-US")} rows` : "Mapped", detail: `Production preview: ${formatQuantity(data.values.latestProduction, "units")} extracted from finished production orders.`, href: "#production", icon: Factory },
+    { title: "Orders", meta: data.entityCounts.vendorLedgerRows ? `${data.entityCounts.vendorLedgerRows.toLocaleString("en-US")} rows` : "Mapped", detail: `Payables preview: vendor-ledger extraction is active with ${data.entityCounts.vendorCount.toLocaleString("en-US")} vendors in the first batch.`, href: "#orders", icon: ClipboardCheck },
+    { title: "Freight And Distribution Expenses", meta: "Needs GL mapping", detail: "Monthly freight and distribution expense view appears here when GL tracking rules are confirmed.", href: "#freight", icon: Truck },
+  ];
 
   return (
     <main className="min-h-screen bg-[var(--canvas)] pb-12 text-[var(--ink)]">
@@ -307,7 +271,7 @@ export default function AGHealthDashboard() {
             <div className="mt-5 space-y-3">
               <div className="flex items-center justify-between rounded-2xl bg-[var(--soft)] px-4 py-3"><span className="font-black">ERP base URL</span><span className="text-sm font-black text-[var(--navy)]">Configured</span></div>
               <div className="flex items-center justify-between rounded-2xl bg-[var(--soft)] px-4 py-3"><span className="font-black">Checked roots</span><span className="text-sm font-black text-[var(--navy)]">1</span></div>
-              <div className="flex items-center justify-between rounded-2xl bg-[var(--soft)] px-4 py-3"><span className="font-black">Retry status</span><span className="text-sm font-black text-[var(--navy)]">{businessCentral.serviceBaseUrl ? "Stable" : "Pending"}</span></div>
+              <div className="flex items-center justify-between rounded-2xl bg-[var(--soft)] px-4 py-3"><span className="font-black">Retry status</span><span className="text-sm font-black text-[var(--navy)]">{data.connected ? "Stable" : "Pending"}</span></div>
             </div>
             <p className="mt-5 text-sm leading-6 text-[var(--text)]">This panel shows the current data-connection state for the executive homepage.</p>
             <p className="mt-6 text-sm font-black uppercase tracking-[0.16em] text-[var(--text-light)]">Quick Actions</p>
@@ -345,7 +309,7 @@ export default function AGHealthDashboard() {
                 <div className="flex gap-2 text-sm font-black"><span className="rounded-full bg-[var(--badge)] px-4 py-2">All years</span><span className="rounded-full bg-white px-4 py-2 shadow-sm">2083</span><span className="rounded-full bg-white px-4 py-2 shadow-sm">2082</span></div>
               </div>
               <div className="mt-8 flex h-80 items-end gap-3 border-b border-l border-[var(--border-strong)] px-4 pb-4">
-                {salesBars.map((bar) => <div key={bar.month} className="flex flex-1 flex-col items-center justify-end gap-2"><span className="w-full rounded-t-xl bg-[var(--navy)]" style={{ height: `${bar.value}%` }} /><span className="text-xs font-semibold text-[var(--text-light)] [writing-mode:vertical-rl] sm:[writing-mode:horizontal-tb]">{bar.month}</span></div>)}
+                {data.monthlySales.map((bar) => <div key={bar.month} className="flex flex-1 flex-col items-center justify-end gap-2"><span className="w-full rounded-t-xl bg-[var(--navy)]" title={formatNpr(bar.amount)} style={{ height: `${bar.height}%` }} /><span className="text-xs font-semibold text-[var(--text-light)] [writing-mode:vertical-rl] sm:[writing-mode:horizontal-tb]">{bar.month}</span></div>)}
               </div>
             </article>
             <article className="analysis-panel">
@@ -353,7 +317,7 @@ export default function AGHealthDashboard() {
               <p className="mt-3 text-sm leading-6 text-[var(--text)]">Revenue and purchases are NPR values; production is output quantity on its own axis so the units stay honest.</p>
               <div className="mt-5 flex flex-wrap gap-4 text-sm font-black"><span className="text-emerald-600">Production Output</span><span className="text-[var(--gold)]">Purchases</span><span className="text-[var(--navy)]">Revenue</span></div>
               <div className="mt-8 flex h-80 items-end gap-3 border-b border-l border-[var(--border-strong)] px-4 pb-4">
-                {combinedBars.map((bar) => (
+                {data.combinedMonthly.map((bar) => (
                   <div key={bar.month} className="flex flex-1 flex-col items-center justify-end gap-2">
                     <span className="flex h-full w-full items-end justify-center gap-1">
                       <span className="w-2 rounded-t bg-emerald-500" style={{ height: `${bar.production}%` }} />
@@ -376,11 +340,11 @@ export default function AGHealthDashboard() {
           <article className="mt-8 analysis-panel">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
               <div><h3 className="text-2xl font-black text-[var(--ink)]">Business Central Materials</h3><p className="mt-3 text-sm leading-6 text-[var(--text)]">Exact live raw-material quantities in kilograms from Itemcard rows where the posting group is RM.</p></div>
-              <div className="rounded-2xl bg-[var(--badge)] px-5 py-3 text-right"><p className="text-xl font-black text-[var(--navy)]">10,856,326.7135 kg</p><p className="text-xs font-black text-[var(--text)]">250 positive-stock materials out of 302 ERP raw-material items</p></div>
+              <div className="rounded-2xl bg-[var(--badge)] px-5 py-3 text-right"><p className="text-xl font-black text-[var(--navy)]">{formatQuantity(data.values.rawMaterialStock)}</p><p className="text-xs font-black text-[var(--text)]">{data.entityCounts.rawMaterialPositiveRows.toLocaleString("en-US")} positive-stock materials out of {data.entityCounts.rawMaterialRows.toLocaleString("en-US")} ERP raw-material items</p></div>
             </div>
             <div className="mt-6 overflow-hidden rounded-2xl border border-[var(--border)]">
               <div className="grid grid-cols-[1fr_8rem_9rem] bg-[var(--soft)] px-4 py-3 text-xs font-black uppercase tracking-[0.12em] text-[var(--text-light)]"><span>Material</span><span>ERP item</span><span>Quantity (kg)</span></div>
-              {materialRows.map(([name, item, quantity]) => <div key={item} className="grid grid-cols-[1fr_8rem_9rem] border-t border-[var(--border)] bg-white px-4 py-3 text-sm"><span className="font-semibold">{name}</span><span className="text-[var(--text)]">{item}</span><span className="font-black text-[var(--navy)]">{quantity}</span></div>)}
+              {data.materialRows.map((row) => <div key={row.item} className="grid grid-cols-[1fr_8rem_9rem] border-t border-[var(--border)] bg-white px-4 py-3 text-sm"><span className="font-semibold">{row.name}</span><span className="text-[var(--text)]">{row.item}</span><span className="font-black text-[var(--navy)]">{row.quantity.toLocaleString("en-US", { maximumFractionDigits: 4 })}</span></div>)}
             </div>
           </article>
         </section>
