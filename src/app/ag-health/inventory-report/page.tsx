@@ -35,7 +35,7 @@ export default async function InventoryReportPage() {
     .sort((a, b) => b.stockValue - a.stockValue)
     .slice(0, 12)
     .map((row) => ({
-      label: row.itemName.slice(0, 14),
+      label: row.itemName,
       amount: row.stockValue,
       height: topItemMax > 0 ? Math.max(4, Math.round((row.stockValue / topItemMax) * 92)) : 0,
     }));

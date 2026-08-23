@@ -259,6 +259,14 @@ export function BarChart({
               </div>
             </div>
           </div>
+          <div className="mt-5 grid gap-2 md:grid-cols-2 xl:grid-cols-4">
+            {bars.map((bar) => (
+              <div key={`bar-value-${bar.label}`} className="rounded-2xl bg-white/80 px-4 py-3 shadow-sm">
+                <p className="truncate text-xs font-black uppercase tracking-[0.08em] text-[var(--text-light)]" title={bar.label}>{bar.label}</p>
+                <p className="mt-1 text-sm font-black text-[var(--navy)]">{valueFormatter(bar.amount)}</p>
+              </div>
+            ))}
+          </div>
         </div>
       )}
     </article>
@@ -300,19 +308,30 @@ export function ComboBarChart({
         <span className="text-[var(--navy)]">{thirdLabel}</span>
       </div>
       <div className="premium-chart-surface mt-8 overflow-x-auto p-4">
-      <div className="premium-chart-axis relative flex h-[360px] min-w-[48rem] items-end gap-5 px-4 pb-4">
-        {!hasPositiveValues ? <div className="premium-chart-empty">No positive ERP values for this grouped chart yet.</div> : null}
-        {bars.map((bar) => (
-          <div key={bar.label} className="flex h-full flex-1 flex-col items-center justify-end gap-2">
-            <span className="flex h-full w-full items-end justify-center gap-1">
-              <span className="premium-chart-bar w-3 bg-emerald-500" title={`${firstLabel} ${bar.label}: ${bar.productionAmount || `${bar.production}%`}`} style={{ height: `${bar.production}%` }} />
-              <span className="premium-chart-bar w-3 bg-[var(--gold)]" title={`${middleLabel} ${bar.label}: ${bar.purchasesAmount || `${bar.purchases}%`}`} style={{ height: `${bar.purchases}%` }} />
-              <span className="premium-chart-bar w-3 bg-[var(--navy)]" title={`${thirdLabel} ${bar.label}: ${bar.revenueAmount || `${bar.revenue}%`}`} style={{ height: `${bar.revenue}%` }} />
-            </span>
-            <span className="text-xs font-semibold text-[var(--text-light)] [writing-mode:vertical-rl] sm:[writing-mode:horizontal-tb]">{bar.label}</span>
-          </div>
-        ))}
-      </div>
+        <div className="premium-chart-axis relative flex h-[360px] min-w-[48rem] items-end gap-5 px-4 pb-4">
+          {!hasPositiveValues ? <div className="premium-chart-empty">No positive ERP values for this grouped chart yet.</div> : null}
+          {bars.map((bar) => (
+            <div key={bar.label} className="flex h-full flex-1 flex-col items-center justify-end gap-2">
+              <span className="text-center text-[10px] font-black leading-tight text-[var(--navy)]">{bar.revenueAmount || bar.purchasesAmount || bar.productionAmount || "0"}</span>
+              <span className="flex h-full w-full items-end justify-center gap-1">
+                <span className="premium-chart-bar w-3 bg-emerald-500" title={`${firstLabel} ${bar.label}: ${bar.productionAmount || `${bar.production}%`}`} style={{ height: `${bar.production}%` }} />
+                <span className="premium-chart-bar w-3 bg-[var(--gold)]" title={`${middleLabel} ${bar.label}: ${bar.purchasesAmount || `${bar.purchases}%`}`} style={{ height: `${bar.purchases}%` }} />
+                <span className="premium-chart-bar w-3 bg-[var(--navy)]" title={`${thirdLabel} ${bar.label}: ${bar.revenueAmount || `${bar.revenue}%`}`} style={{ height: `${bar.revenue}%` }} />
+              </span>
+              <span className="text-xs font-semibold text-[var(--text-light)] [writing-mode:vertical-rl] sm:[writing-mode:horizontal-tb]" title={bar.label}>{bar.label}</span>
+            </div>
+          ))}
+        </div>
+        <div className="mt-5 grid gap-2 md:grid-cols-2 xl:grid-cols-4">
+          {bars.map((bar) => (
+            <div key={`combo-value-${bar.label}`} className="rounded-2xl bg-white/80 px-4 py-3 shadow-sm">
+              <p className="text-xs font-black uppercase tracking-[0.08em] text-[var(--text-light)]">{bar.label}</p>
+              <p className="mt-1 text-xs font-bold text-emerald-600">{firstLabel}: {bar.productionAmount || `${bar.production}%`}</p>
+              <p className="text-xs font-bold text-[var(--gold)]">{middleLabel}: {bar.purchasesAmount || `${bar.purchases}%`}</p>
+              <p className="text-xs font-bold text-[var(--navy)]">{thirdLabel}: {bar.revenueAmount || `${bar.revenue}%`}</p>
+            </div>
+          ))}
+        </div>
       </div>
     </article>
   );

@@ -35,7 +35,7 @@ function OutputChart({ bars }: { bars: { label: string; amount: number; height: 
         </div>
       </div>
       <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-        {bars.slice(-8).map((bar) => <div key={`value-${bar.label}`} className="rounded-2xl bg-[var(--soft)] px-4 py-3"><p className="text-xs font-black uppercase tracking-[0.1em] text-[var(--text-light)]">{bar.label}</p><p className="mt-1 text-lg font-black text-[var(--navy)]">{formatQuantity(bar.amount, "pcs")}</p></div>)}
+        {bars.map((bar) => <div key={`value-${bar.label}`} className="rounded-2xl bg-[var(--soft)] px-4 py-3"><p className="text-xs font-black uppercase tracking-[0.1em] text-[var(--text-light)]">{bar.label}</p><p className="mt-1 text-lg font-black text-[var(--navy)]">{formatQuantity(bar.amount, "pcs")}</p></div>)}
       </div>
     </article>
   );
@@ -55,7 +55,7 @@ function SummaryStrip({ stats }: { stats: { label: string; value: string; detail
   );
 }
 
-function ComboChart({ bars, revenues }: { bars: { label: string; height: number }[]; revenues: { label: string; amount: number }[] }) {
+function ComboChart({ bars, revenues }: { bars: { label: string; amount: number; height: number }[]; revenues: { label: string; amount: number }[] }) {
   const revenueByMonth = new Map(revenues.map((row) => [row.label, row.amount]));
   const revenueMax = Math.max(...revenues.map((row) => row.amount), 0);
   const hasPositiveValues = bars.some((bar) => bar.height > 0) || revenueMax > 0;
@@ -70,7 +70,13 @@ function ComboChart({ bars, revenues }: { bars: { label: string; height: number 
         {bars.map((bar) => {
           const revenue = revenueByMonth.get(bar.label) || 0;
           const revenueHeight = revenueMax > 0 && revenue > 0 ? Math.max(6, Math.round((revenue / revenueMax) * 92)) : 0;
-          return <div key={bar.label} className="flex h-full min-w-12 flex-1 flex-col items-center justify-end gap-2"><span className="flex h-full w-full items-end justify-center gap-1"><span className="premium-chart-bar w-3 bg-[#10b981]" style={{ height: `${bar.height > 0 ? Math.max(6, bar.height) : 0}%` }} /><span className="premium-chart-bar w-3 bg-[var(--navy)]" style={{ height: `${revenueHeight}%` }} /></span><span className="max-w-20 truncate text-xs font-black text-[var(--text-light)]">{bar.label}</span></div>;
+          return <div key={bar.label} className="flex h-full min-w-12 flex-1 flex-col items-center justify-end gap-2"><span className="text-center text-[10px] font-black leading-tight text-[var(--navy)]">{formatQuantity(bar.amount, "pcs")}</span><span className="flex h-full w-full items-end justify-center gap-1"><span className="premium-chart-bar w-3 bg-[#10b981]" title={`Production ${bar.label}: ${formatQuantity(bar.amount, "pcs")}`} style={{ height: `${bar.height > 0 ? Math.max(6, bar.height) : 0}%` }} /><span className="premium-chart-bar w-3 bg-[var(--navy)]" title={`Sales ${bar.label}: ${formatNpr(revenue)}`} style={{ height: `${revenueHeight}%` }} /></span><span className="max-w-20 truncate text-xs font-black text-[var(--text-light)]" title={bar.label}>{bar.label}</span></div>;
+        })}
+      </div>
+      <div className="mt-5 grid gap-2 md:grid-cols-2 xl:grid-cols-4">
+        {bars.map((bar) => {
+          const revenue = revenueByMonth.get(bar.label) || 0;
+          return <div key={`combo-data-${bar.label}`} className="rounded-2xl bg-white/80 px-4 py-3 shadow-sm"><p className="text-xs font-black uppercase tracking-[0.08em] text-[var(--text-light)]">{bar.label}</p><p className="mt-1 text-xs font-bold text-emerald-600">Production: {formatQuantity(bar.amount, "pcs")}</p><p className="text-xs font-bold text-[var(--navy)]">Sales: {formatNpr(revenue)}</p></div>;
         })}
       </div>
       </div>
@@ -78,7 +84,7 @@ function ComboChart({ bars, revenues }: { bars: { label: string; height: number 
   );
 }
 
-function AreaChart({ bars }: { bars: { label: string; height: number }[] }) {
+function AreaChart({ bars }: { bars: { label: string; amount: number; height: number }[] }) {
   const hasPositiveValues = bars.some((bar) => bar.height > 0);
 
   return (
@@ -87,7 +93,10 @@ function AreaChart({ bars }: { bars: { label: string; height: number }[] }) {
       <div className="premium-chart-surface mt-8 overflow-x-auto p-4">
       <div className="premium-chart-axis relative flex h-[360px] min-w-[42rem] items-end gap-4 px-4 pb-4">
         {!hasPositiveValues ? <div className="premium-chart-empty">No positive production trend values in this view.</div> : null}
-        {bars.map((bar) => <div key={bar.label} className="flex h-full flex-1 flex-col items-center justify-end gap-2"><span className="premium-chart-bar w-full bg-gradient-to-t from-[#10b981] to-emerald-200" style={{ height: `${bar.height > 0 ? Math.max(6, bar.height) : 0}%` }} /><span className="max-w-20 truncate text-xs font-black text-[var(--text-light)]">{bar.label}</span></div>)}
+        {bars.map((bar) => <div key={bar.label} className="flex h-full flex-1 flex-col items-center justify-end gap-2"><span className="text-center text-[10px] font-black leading-tight text-[var(--navy)]">{formatQuantity(bar.amount, "pcs")}</span><span className="premium-chart-bar w-full bg-gradient-to-t from-[#10b981] to-emerald-200" title={`${bar.label}: ${formatQuantity(bar.amount, "pcs")}`} style={{ height: `${bar.height > 0 ? Math.max(6, bar.height) : 0}%` }} /><span className="max-w-20 truncate text-xs font-black text-[var(--text-light)]" title={bar.label}>{bar.label}</span></div>)}
+      </div>
+      <div className="mt-5 grid gap-2 md:grid-cols-2 xl:grid-cols-4">
+        {bars.map((bar) => <div key={`trend-data-${bar.label}`} className="rounded-2xl bg-white/80 px-4 py-3 shadow-sm"><p className="text-xs font-black uppercase tracking-[0.08em] text-[var(--text-light)]">{bar.label}</p><p className="mt-1 text-sm font-black text-[var(--navy)]">{formatQuantity(bar.amount, "pcs")}</p></div>)}
       </div>
       </div>
     </article>

@@ -28,7 +28,7 @@ export default async function PackingMaterialsPage() {
   const data = await getAGHealthDashboardData();
   const maxStock = Math.max(...data.packingMaterials.map((row) => row.currentStock), 0);
   const stockBars = data.packingMaterials.slice(0, 12).map((row) => ({
-    label: row.packingMaterialName.slice(0, 12),
+    label: row.packingMaterialName,
     amount: row.currentStock,
     height: maxStock > 0 ? Math.max(4, Math.round((row.currentStock / maxStock) * 92)) : 0,
   }));
@@ -36,7 +36,7 @@ export default async function PackingMaterialsPage() {
   const valueBars = data.packingMaterials.slice(0, 12).map((row) => {
     const value = row.currentStock * row.purchaseRate;
     return {
-      label: row.packingMaterialName.slice(0, 12),
+      label: row.packingMaterialName,
       amount: value,
       height: maxValue > 0 ? Math.max(4, Math.round((value / maxValue) * 92)) : 0,
     };
