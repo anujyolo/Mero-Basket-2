@@ -275,6 +275,7 @@ export type AGHealthDashboardData = {
 
 const SALES_WINDOW_START = "2025-09-01";
 const NEPAL_TIME_ZONE = "Asia/Kathmandu";
+const ERP_REFRESH_INTERVAL_MS = 5 * 60 * 1000;
 const TODAY = new Intl.DateTimeFormat("en-CA", {
   timeZone: NEPAL_TIME_ZONE,
   year: "numeric",
@@ -485,7 +486,33 @@ function emptyData(message: string, company: string): AGHealthDashboardData {
   };
 }
 
+let cachedDashboardData: AGHealthDashboardData | null = null;
+let cachedDashboardDataAt = 0;
+let dashboardDataRequest: Promise<AGHealthDashboardData> | null = null;
+
 export async function getAGHealthDashboardData(): Promise<AGHealthDashboardData> {
+  const now = Date.now();
+
+  if (cachedDashboardData && now - cachedDashboardDataAt < ERP_REFRESH_INTERVAL_MS) {
+    return cachedDashboardData;
+  }
+
+  if (!dashboardDataRequest) {
+    dashboardDataRequest = loadAGHealthDashboardData()
+      .then((data) => {
+        cachedDashboardData = data;
+        cachedDashboardDataAt = Date.now();
+        return data;
+      })
+      .finally(() => {
+        dashboardDataRequest = null;
+      });
+  }
+
+  return dashboardDataRequest;
+}
+
+async function loadAGHealthDashboardData(): Promise<AGHealthDashboardData> {
   const status = await getBusinessCentralStatus();
 
   if (status.status !== "ready-to-query") {
