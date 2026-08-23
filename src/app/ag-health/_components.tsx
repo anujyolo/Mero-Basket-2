@@ -16,6 +16,7 @@ import {
   User,
   type LucideIcon,
 } from "lucide-react";
+import { AgHealthChatbot } from "./AgHealthChatbot";
 
 export const agHealthModules: { label: string; href: NextRoute; icon: LucideIcon; id: string }[] = [
   { label: "Inventory Report", href: "/ag-health/inventory-report", icon: Boxes, id: "inventory-report" },
@@ -85,6 +86,7 @@ export function AGHealthShell({
         </div>
       </header>
       <section className="mx-auto max-w-[1740px] px-5 py-8">{children}</section>
+      <AgHealthChatbot />
     </main>
   );
 }
