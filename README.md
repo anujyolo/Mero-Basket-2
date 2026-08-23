@@ -470,7 +470,6 @@ Mero Basket should be able to answer that instantly.
 
 # 🚧 Future Improvements
 
-* Real-time financial data synchronization
 * Bank integrations
 * Automated invoice processing
 * OCR for receipts and invoices
