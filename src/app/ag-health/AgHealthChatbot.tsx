@@ -11,10 +11,10 @@ type DashboardData = {
   dashboard: Record<string, number | null>;
   inventoryByCategory: { category: string; totalStock: number; stockValue: number; rows: { itemName: string; itemNo: string; currentStock: number; stockValue: number; unit: string; postingGroup: string; itemCategory: string }[] }[];
   packingMaterials: { packingMaterialName: string; currentStock: number; unit: string; supplier: string; remainingQuantity: number }[];
-  production: { rows: { productName: string; productionDate: string; quantityProduced: number; status: string; unit: string }[]; monthlyTrend: { label: string; amount: number }[]; totalProduction: number; rowCount: number };
-  salesAnalysis: { totalSales: number; monthlySales: number; yearlySales: number; previousMonthSales: number; currentMonthSales: number; growthPercentage: number | null; monthlyTrend: { label: string; amount: number }[]; lineRows: { product: string; dealer: string; districtCity: string; month: string; quantity: number; amount: number }[]; lineSourceNote: string };
+  production: { rows: { productName: string; productionDate: string; quantityProduced: number; status: string; unit: string }[]; monthlyTrend: { label: string; amount: number }[]; totalProduction: number; rowCount: number; categoryMix?: { label: string; value: number; color: string }[] };
+  salesAnalysis: { totalSales: number; monthlySales: number; yearlySales: number; previousMonthSales: number; currentMonthSales: number; growthPercentage: number | null; monthlyTrend: { label: string; amount: number }[]; lineRows: { product: string; productNo?: string; productCategory?: string; customer?: string; dealer: string; country?: string; province?: string; districtCity: string; month: string; year?: string; quantity: number; amount: number; orderStatus?: string; deliveryStatus?: string }[]; lineSourceNote: string };
   freight: { totalFreightExpense: number; rows: unknown[] };
-  orders: { totalOrders: number; pendingOrders: number; rows: { customer: string; product: string; amount: number; orderStatus: string }[] };
+  orders: { totalOrders: number; pendingOrders: number; rows: { customer: string; product: string; amount: number; orderStatus: string }[]; statusMix?: { label: string; value: number; color: string }[] };
 };
 
 type ChatMessage = {
@@ -24,17 +24,63 @@ type ChatMessage = {
 
 const npr = (value: number | null | undefined) => value == null ? "ERP pending" : `NPR ${value.toLocaleString("en-US", { maximumFractionDigits: 2 })}`;
 const qty = (value: number | null | undefined, unit = "") => value == null ? "ERP pending" : `${value.toLocaleString("en-US", { maximumFractionDigits: 2 })}${unit ? ` ${unit}` : ""}`;
+const normalize = (value: string) => value.toLowerCase().replace(/[^a-z0-9]/g, "");
+const isMapped = (value: string | undefined) => Boolean(value && !value.toLowerCase().includes("not mapped"));
+const stopWords = new Set(["what", "show", "tell", "about", "sales", "sale", "stock", "qty", "quantity", "product", "data", "summary", "analysis", "how", "much", "many", "did", "we", "have", "for", "from", "the", "this", "that", "month", "year", "dealer", "location", "city", "district", "province"]);
+const keywords = (value: string) => value.toLowerCase().split(/[^a-z0-9]+/).filter((word) => word.length >= 2 && !stopWords.has(word)).map(normalize);
 
 function topBy<T>(rows: T[], value: (row: T) => number, limit = 5) {
   return rows.slice().sort((a, b) => value(b) - value(a)).slice(0, limit);
 }
 
+function aggregateSales(rows: DashboardData["salesAnalysis"]["lineRows"], key: (row: DashboardData["salesAnalysis"]["lineRows"][number]) => string, limit = 5) {
+  const totals = new Map<string, { label: string; quantity: number; amount: number; rows: number }>();
+
+  rows.forEach((row) => {
+    const label = key(row) || "Not mapped";
+    const current = totals.get(label) || { label, quantity: 0, amount: 0, rows: 0 };
+    current.quantity += row.quantity || 0;
+    current.amount += row.amount || 0;
+    current.rows += 1;
+    totals.set(label, current);
+  });
+
+  return Array.from(totals.values()).sort((a, b) => b.amount - a.amount).slice(0, limit);
+}
+
+function salesBreakdown(title: string, rows: DashboardData["salesAnalysis"]["lineRows"]) {
+  const amount = rows.reduce((sum, row) => sum + row.amount, 0);
+  const quantity = rows.reduce((sum, row) => sum + row.quantity, 0);
+  const topProducts = aggregateSales(rows, (row) => row.product, 5);
+  const topDealers = aggregateSales(rows, (row) => row.dealer || row.customer || "Not mapped", 3);
+  const topLocations = aggregateSales(rows, (row) => row.districtCity || row.province || "Not mapped", 3);
+
+  return [
+    `${title}:`,
+    `Rows matched: ${rows.length.toLocaleString("en-US")}`,
+    `Total sales amount: ${npr(amount)}`,
+    `Total quantity sold: ${qty(quantity, "pcs")}`,
+    "",
+    `Top products:\n${topProducts.map((row, index) => `${index + 1}. ${row.label}: ${npr(row.amount)} · ${qty(row.quantity, "pcs")}`).join("\n") || "No product rows mapped."}`,
+    "",
+    `Top dealers/customers:\n${topDealers.map((row, index) => `${index + 1}. ${row.label}: ${npr(row.amount)} · ${qty(row.quantity, "pcs")}`).join("\n") || "No dealer rows mapped."}`,
+    "",
+    `Top locations:\n${topLocations.map((row, index) => `${index + 1}. ${row.label}: ${npr(row.amount)}`).join("\n") || "No location rows mapped."}`,
+  ].join("\n");
+}
+
 function productAnswer(data: DashboardData, query: string) {
-  const words = query.toLowerCase().split(/[^a-z0-9]+/).filter((word) => word.length >= 2 && !["what", "show", "tell", "about", "sales", "stock", "qty", "quantity", "product"].includes(word));
+  const words = keywords(query);
   if (words.length === 0) return "";
 
-  const salesMatches = data.salesAnalysis.lineRows.filter((row) => words.every((word) => row.product.toLowerCase().includes(word)));
-  const inventoryMatches = data.inventoryByCategory.flatMap((category) => category.rows).filter((row) => words.every((word) => row.itemName.toLowerCase().includes(word) || row.itemNo.toLowerCase().includes(word)));
+  const salesMatches = data.salesAnalysis.lineRows.filter((row) => {
+    const searchable = normalize(`${row.product} ${row.productNo || ""} ${row.productCategory || ""}`);
+    return words.every((word) => searchable.includes(word));
+  });
+  const inventoryMatches = data.inventoryByCategory.flatMap((category) => category.rows).filter((row) => {
+    const searchable = normalize(`${row.itemName} ${row.itemNo} ${row.itemCategory} ${row.postingGroup}`);
+    return words.every((word) => searchable.includes(word));
+  });
 
   if (salesMatches.length === 0 && inventoryMatches.length === 0) return "";
 
@@ -47,15 +93,34 @@ function productAnswer(data: DashboardData, query: string) {
 
   return [
     `I found ${salesMatches.length.toLocaleString("en-US")} sales line(s) and ${inventoryMatches.length.toLocaleString("en-US")} inventory item(s) matching your product search.`,
-    salesMatches.length ? `Sales match: ${qty(salesQty)} sold for ${npr(salesAmount)}. Top sales line: ${topSalesProduct.product} in ${topSalesProduct.districtCity || "unmapped location"}.` : "No matching sales lines are currently mapped for that product.",
+    salesMatches.length ? `Sales match: ${qty(salesQty, "pcs")} sold for ${npr(salesAmount)}. Top sales line: ${topSalesProduct.product} in ${topSalesProduct.districtCity || "unmapped location"}.` : "No matching sales lines are currently mapped for that product.",
     inventoryMatches.length ? `Inventory match: ${qty(stockQty)} in stock worth ${npr(stockValue)}. Top stock item: ${topStockItem.itemName}.` : "No matching inventory item is currently mapped for that product.",
   ].join("\n");
 }
 
 function answerQuestion(data: DashboardData, question: string) {
   const q = question.toLowerCase();
+  const queryWords = keywords(q);
   const product = productAnswer(data, q);
   if (product) return product;
+
+  const locationRows = data.salesAnalysis.lineRows.filter((row) => {
+    if (!isMapped(row.districtCity) && !isMapped(row.province)) return false;
+    const searchable = normalize(`${row.districtCity || ""} ${row.province || ""} ${row.country || ""}`);
+    return queryWords.length > 0 && queryWords.every((word) => searchable.includes(word));
+  });
+  if (locationRows.length > 0) {
+    return salesBreakdown(`Sales analysis for this location`, locationRows);
+  }
+
+  const dealerRows = data.salesAnalysis.lineRows.filter((row) => {
+    if (!isMapped(row.dealer) && !isMapped(row.customer)) return false;
+    const searchable = normalize(`${row.dealer || ""} ${row.customer || ""}`);
+    return queryWords.length > 0 && queryWords.every((word) => searchable.includes(word));
+  });
+  if (dealerRows.length > 0) {
+    return salesBreakdown(`Dealer/customer sales analysis`, dealerRows);
+  }
 
   if (q.includes("bank") || q.includes("cash")) {
     return `Bank Balance is ${npr(data.dashboard.bankBalance)}.\nSource: Business Central Trial Balance, Bank Account / Bank Balance-Total.`;
@@ -65,17 +130,21 @@ function answerQuestion(data: DashboardData, question: string) {
   }
   if (q.includes("sale") || q.includes("revenue")) {
     const latest = data.salesAnalysis.monthlyTrend.at(-1);
-    const topProducts = topBy(data.salesAnalysis.lineRows, (row) => row.amount, 5)
-      .map((row, index) => `${index + 1}. ${row.product}: ${npr(row.amount)} · ${qty(row.quantity)} sold`)
+    const topProducts = aggregateSales(data.salesAnalysis.lineRows, (row) => row.product, 5)
+      .map((row, index) => `${index + 1}. ${row.label}: ${npr(row.amount)} · ${qty(row.quantity, "pcs")} sold`)
       .join("\n");
-    return `Sales summary:\n12-month/visible sales: ${npr(data.salesAnalysis.totalSales)}\nLatest month${latest ? ` (${latest.label})` : ""}: ${npr(latest?.amount || data.salesAnalysis.monthlySales)}\nYearly sales: ${npr(data.salesAnalysis.yearlySales)}\nGrowth: ${data.salesAnalysis.growthPercentage == null ? "ERP pending" : `${data.salesAnalysis.growthPercentage.toFixed(1)}%`}\n\nTop sales lines:\n${topProducts || "No sales product lines mapped yet."}`;
+    const topDealers = aggregateSales(data.salesAnalysis.lineRows, (row) => row.dealer || row.customer || "Not mapped", 5)
+      .map((row, index) => `${index + 1}. ${row.label}: ${npr(row.amount)}`)
+      .join("\n");
+    return `Sales summary:\n12-month/visible sales: ${npr(data.salesAnalysis.totalSales)}\nLatest month${latest ? ` (${latest.label})` : ""}: ${npr(latest?.amount || data.salesAnalysis.monthlySales)}\nYearly sales: ${npr(data.salesAnalysis.yearlySales)}\nGrowth: ${data.salesAnalysis.growthPercentage == null ? "ERP pending" : `${data.salesAnalysis.growthPercentage.toFixed(1)}%`}\n\nTop products sold:\n${topProducts || "No sales product lines mapped yet."}\n\nTop dealers/customers:\n${topDealers || "Dealer/customer is not mapped in the current ERP rows."}`;
   }
   if (q.includes("production") || q.includes("produced") || q.includes("pcs")) {
     const latest = data.production.monthlyTrend.at(-1);
     const topProduction = topBy(data.production.rows, (row) => row.quantityProduced, 5)
       .map((row, index) => `${index + 1}. ${row.productName}: ${qty(row.quantityProduced, "pcs")} on ${row.productionDate}`)
       .join("\n");
-    return `Production summary:\nTotal production loaded: ${qty(data.production.totalProduction, "pcs")}\nLatest month${latest ? ` (${latest.label})` : ""}: ${qty(latest?.amount, "pcs")}\nRows loaded: ${data.production.rowCount.toLocaleString("en-US")}\n\nTop production rows:\n${topProduction || "No production rows mapped yet."}`;
+    const categoryMix = (data.production.categoryMix || []).map((slice) => `${slice.label}: ${qty(slice.value, "pcs")}`).join("\n");
+    return `Production summary:\nTotal production loaded: ${qty(data.production.totalProduction, "pcs")}\nLatest month${latest ? ` (${latest.label})` : ""}: ${qty(latest?.amount, "pcs")}\nRows loaded: ${data.production.rowCount.toLocaleString("en-US")}\n\nCategory split:\n${categoryMix || "Production category is not mapped yet."}\n\nTop production rows:\n${topProduction || "No production rows mapped yet."}`;
   }
   if (q.includes("inventory") || q.includes("stock")) {
     const categories = topBy(data.inventoryByCategory, (row) => row.stockValue, 5)
@@ -90,13 +159,14 @@ function answerQuestion(data: DashboardData, question: string) {
     return `Packing material summary:\nTotal packing stock: ${qty(data.dashboard.packingMaterialStock)}\nRows loaded: ${data.packingMaterials.length.toLocaleString("en-US")}\n\nTop PM items:\n${topPacking || "No packing material rows mapped yet."}`;
   }
   if (q.includes("order")) {
-    return `Orders summary:\nTotal orders: ${qty(data.orders.totalOrders)}\nPending/processing orders: ${qty(data.orders.pendingOrders)}\nSource: SalesOrder + salesDocumentLines.`;
+    const statusMix = (data.orders.statusMix || []).map((row) => `${row.label}: ${qty(row.value)}`).join("\n");
+    return `Orders summary:\nTotal orders: ${qty(data.orders.totalOrders)}\nPending/processing orders: ${qty(data.orders.pendingOrders)}\nSource: SalesOrder + salesDocumentLines.\n\nStatus split:\n${statusMix || "Order statuses are not mapped yet."}`;
   }
   if (q.includes("freight") || q.includes("transport")) {
     return `Freight summary:\nTotal freight expense: ${npr(data.freight.totalFreightExpense)}\nMatched freight rows: ${data.freight.rows.length.toLocaleString("en-US")}\nSource: General ledger entries containing freight/transport signals.`;
   }
   if (q.includes("source") || q.includes("where") || q.includes("data")) {
-    return `Data sources:\nSales: SalesDashboard\nReceivables and Bank Balance: ExcelTemplateTrialBalance\nInventory and Packing: Itemcard\nProduction: Finishedproductionordgers\nOrders: SalesOrder + salesDocumentLines\nFreight: Generalledgerentries\n\nI only answer from these mapped ERP feeds.`;
+    return `Data sources:\nSales totals: SalesDashboard\nSales product/dealer lines: SalesOrder + salesDocumentLines\nReceivables and Bank Balance: ExcelTemplateTrialBalance\nInventory and Packing: Itemcard\nProduction: Finishedproductionordgers\nOrders: SalesOrder + salesDocumentLines\nFreight: Generalledgerentries\n\nIf a field says “Not mapped,” the ERP feed did not provide that value clearly yet. I do not make up missing data.`;
   }
 
   return `I can answer from the AG Health ERP data loaded in this app. Try asking:\n• What is the bank balance?\n• Show sales summary\n• Show production summary\n• How much M5 did we sell?\n• What is packing stock?\n• Show inventory value by category\n• How many pending orders?`;
