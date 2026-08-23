@@ -190,7 +190,7 @@ export default async function AGHealthDashboard() {
         <div className="mt-8 grid gap-6 xl:grid-cols-3">
           <ExecutiveKpiCard title="Business Central Sales (12-Month)" value={formatNpr(data.dashboard.totalSales)} detail="Total sales for the visible 12-month Business Central window." source="Sales" icon={dashboardIcons.BarChart3} />
           <ExecutiveKpiCard title="Business Central Receivables" value={formatNpr(data.dashboard.receivables)} detail="Customer receivables from the live trial balance row mapped for Sundry Debtor." source="ExcelTemplateTrialBalance" icon={dashboardIcons.ReceiptText} />
-          <ExecutiveKpiCard title="Business Central Bank Balance" value={formatNpr(data.dashboard.bankBalance)} detail={`Current live Business Central bank balance across ${data.dashboard.bankRows || 0} BANK rows.`} source="Bankacccard1" accent="gold" icon={dashboardIcons.Banknote} />
+          <ExecutiveKpiCard title="Business Central Bank Balance" value={formatNpr(data.dashboard.bankBalance)} detail={`Live Trial Balance Bank Account total. Bank-card detail has ${data.dashboard.bankRows || 0} active BANK rows for reconciliation.`} source="ExcelTemplateTrialBalance" accent="gold" icon={dashboardIcons.Banknote} />
         </div>
         <SummaryStrip stats={executiveStats} />
         <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">

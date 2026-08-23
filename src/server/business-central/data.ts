@@ -274,7 +274,13 @@ export type AGHealthDashboardData = {
 };
 
 const SALES_WINDOW_START = "2025-09-01";
-const TODAY = new Date().toISOString().slice(0, 10);
+const NEPAL_TIME_ZONE = "Asia/Kathmandu";
+const TODAY = new Intl.DateTimeFormat("en-CA", {
+  timeZone: NEPAL_TIME_ZONE,
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+}).format(new Date());
 const CURRENT_MONTH = TODAY.slice(0, 7);
 const CURRENT_YEAR = TODAY.slice(0, 4);
 
@@ -487,7 +493,17 @@ export async function getAGHealthDashboardData(): Promise<AGHealthDashboardData>
   }
 
   try {
-    const [itemsResult, salesResult, productionResult, orderResult, orderLineResult, glResult, trialBalanceResult, bankResult] = await Promise.all([
+    const [
+      itemsResult,
+      salesResult,
+      productionResult,
+      orderResult,
+      orderLineResult,
+      glResult,
+      trialBalanceResult,
+      bankTrialBalanceResult,
+      bankResult,
+    ] = await Promise.all([
       fetchEntity<ItemRow>(
         "Itemcard",
         "$select=No,Description,Base_Unit_of_Measure,Item_Category_Code,Inventory,Qty_on_Purch_Order,Unit_Cost,Last_Direct_Cost,Inventory_Posting_Group,Unit_Price,Vendor_No,Last_Date_Modified&$count=true",
@@ -516,6 +532,10 @@ export async function getAGHealthDashboardData(): Promise<AGHealthDashboardData>
       fetchEntity<TrialBalanceRow>(
         "ExcelTemplateTrialBalance",
         "$filter=number eq '110405'&$select=number,display,balanceAtDateDebit,balanceAtDateCredit,dateFilter&$count=true",
+      ),
+      fetchEntity<TrialBalanceRow>(
+        "ExcelTemplateTrialBalance",
+        "$select=number,display,balanceAtDateDebit,balanceAtDateCredit,dateFilter&$top=500",
       ),
       fetchEntity<BankRow>(
         "Bankacccard1",
@@ -784,7 +804,14 @@ export async function getAGHealthDashboardData(): Promise<AGHealthDashboardData>
     const activeBanks = bankResult.rows.filter(
       (row) => !row.Blocked && (row.Bank_Acc_Posting_Group === "BANK" || row.Bank_Acc_Posting_Group1 === "BANK"),
     );
-    const bankBalance = activeBanks.reduce((sum, row) => sum + toNumber(row.Balance_LCY), 0);
+    const bankCardBalance = activeBanks.reduce((sum, row) => sum + toNumber(row.Balance_LCY), 0);
+    const bankTrialBalanceRow = bankTrialBalanceResult.rows.find(
+      (row) => row.display === "Bank Balance-Total" || row.display === "Bank Account" || row.number === "110249" || row.number === "110202",
+    );
+    const bankTrialBalance = bankTrialBalanceRow
+      ? toNumber(bankTrialBalanceRow.balanceAtDateDebit) - toNumber(bankTrialBalanceRow.balanceAtDateCredit)
+      : 0;
+    const bankBalance = bankTrialBalance || bankCardBalance;
     const orderStatusColors: Record<OrderRow["orderStatus"], string> = {
       Pending: "#e2be2d",
       Processing: "#3d78dd",
