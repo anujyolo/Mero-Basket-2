@@ -25,7 +25,7 @@ export default async function AGHealthDashboard() {
   const grossMargin = latestRevenue > 0 ? ((latestRevenue - latestCost) / latestRevenue) * 100 : null;
 
   const decisionCards = [
-    { label: "Inventory Value", value: formatNpr(data.dashboard.totalInventoryValue), note: "Total stock value in ERP.", icon: dashboardIcons.Boxes },
+    { label: "Inventory Value", value: formatNpr(data.dashboard.totalInventoryValue), note: "Calculated from ERP stock × cost rate. Use for operations, not final accounting.", icon: dashboardIcons.Boxes },
     { label: "Packing Stock", value: formatQuantity(data.dashboard.packingMaterialStock), note: "Only packing-material stock.", icon: dashboardIcons.PackageCheck },
     { label: "Latest Production", value: latestProductionMonth ? formatQuantity(latestProductionMonth.amount, "pcs") : "ERP pending", note: latestProductionMonth ? `${latestProductionMonth.label} production output.` : "No production month found.", icon: dashboardIcons.Factory },
     { label: "Pending Orders", value: formatQuantity(data.dashboard.pendingOrders), note: "Orders still pending/processing.", icon: dashboardIcons.ClipboardCheck },
@@ -50,7 +50,7 @@ export default async function AGHealthDashboard() {
             <p className="text-sm font-black uppercase tracking-[0.2em] text-[var(--gold)]">Executive Dashboard</p>
             <h1 className="mt-5 max-w-5xl text-4xl font-black tracking-tight text-[var(--ink)] lg:text-6xl">AG Health live business overview</h1>
             <p className="mt-5 max-w-4xl text-lg leading-8 text-[var(--text)]">
-              Simple CEO view: sales, cash, stock, production, and pending work first. Detailed reports stay on their own pages.
+              Simple CEO view: trusted financial numbers first, then operational numbers below. Detailed reports stay on their own pages.
             </p>
           </div>
           <div className="grid gap-3 sm:grid-cols-2 xl:min-w-[28rem]">
@@ -68,9 +68,12 @@ export default async function AGHealthDashboard() {
       </section>
 
       <section className="mt-8">
-        <div className="grid gap-6 xl:grid-cols-4">
+        <div className="mb-4">
+          <p className="text-sm font-black uppercase tracking-[0.2em] text-[var(--navy)]">Verified Financial Snapshot</p>
+          <p className="mt-2 max-w-4xl text-sm font-semibold leading-6 text-[var(--text)]">These are the three upper cards. They come directly from Business Central sales and trial-balance feeds.</p>
+        </div>
+        <div className="grid gap-6 xl:grid-cols-3">
           <ExecutiveKpiCard title="12-Month Sales" value={formatNpr(data.dashboard.totalSales)} detail="Sales total from the visible Business Central analysis window." source="SalesDashboard" icon={dashboardIcons.BarChart3} />
-          <ExecutiveKpiCard title="This Month Sales" value={formatNpr(latestRevenue)} detail={latestSalesMonth ? `${latestSalesMonth.label} sales from Business Central.` : "Waiting for live monthly sales."} source="SalesDashboard" icon={dashboardIcons.BarChart3} />
           <ExecutiveKpiCard title="Receivables" value={formatNpr(data.dashboard.receivables)} detail="Customer money still to receive from the live trial balance." source="Trial Balance" icon={dashboardIcons.ReceiptText} />
           <ExecutiveKpiCard title="Bank Balance" value={formatNpr(data.dashboard.bankBalance)} detail="Live Trial Balance Bank Account total." source="Trial Balance" accent="gold" icon={dashboardIcons.Banknote} />
         </div>
@@ -80,9 +83,9 @@ export default async function AGHealthDashboard() {
         <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="text-sm font-black uppercase tracking-[0.2em] text-[var(--navy)]">At a glance</p>
-            <h2 className="mt-2 text-3xl font-black tracking-tight">What needs attention</h2>
+            <h2 className="mt-2 text-3xl font-black tracking-tight">Operational numbers to review</h2>
           </div>
-          <p className="max-w-2xl text-sm font-semibold leading-6 text-[var(--text)]">Each card explains exactly what the number means. Click a module below for detail.</p>
+          <p className="max-w-2xl text-sm font-semibold leading-6 text-[var(--text)]">These numbers are useful for daily work. Calculated values are clearly marked so they are not confused with audited totals.</p>
         </div>
         <div className="kpi-grid">
           {decisionCards.map((metric) => <MetricCard key={metric.label} {...metric} />)}
